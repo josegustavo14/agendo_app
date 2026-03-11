@@ -9,15 +9,17 @@ class HomeViewModel extends ChangeNotifier {
 
   List<AppointmentModel> appointments = [];
   bool isLoading = false;
+  String? errorMessage;
 
   Future<void> loadAppointments() async {
     isLoading = true;
+    errorMessage = null;
     notifyListeners();
 
     try {
       appointments = await repository.fetchAppointments();
     } catch (e) {
-      // Tratar erro aqui
+      errorMessage = 'Erro ao carregar agendamentos';
     } finally {
       isLoading = false;
       notifyListeners();

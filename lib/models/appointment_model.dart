@@ -1,15 +1,17 @@
 class AppointmentModel {
   final int id;
+  final String professionalName;
+  final String clientName;
   final String serviceType;
-  final String user; 
-  final int value; 
+  final int value;
   final DateTime scheduleDate;
-  final DateTime requestDate; 
+  final DateTime requestDate;
 
   AppointmentModel({
     required this.id,
+    required this.professionalName,
+    required this.clientName,
     required this.serviceType,
-    required this.user,
     required this.value,
     required this.scheduleDate,
     required this.requestDate,
@@ -18,24 +20,13 @@ class AppointmentModel {
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
     return AppointmentModel(
       id: json['id'] as int,
-      serviceType: json['serviceType'] as String,
-      user: json['user'] as String,
-      value: json['value'] as int,
-      // O Spring Boot geralmente envia datas em ISO8601 (Strings)
+      professionalName: json['professional']['name'] as String,
+      clientName: json['client']['name'] as String,
+      serviceType: json['serviceType']['name'] as String,
+      value: json['valueInCents'] as int,
       scheduleDate: DateTime.parse(json['scheduleDate'] as String),
       requestDate: DateTime.parse(json['requestDate'] as String),
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'serviceType': serviceType,
-      'user': user,
-      'value': value,
-      'scheduleDate': scheduleDate.toIso8601String(),
-      'requestDate': requestDate.toIso8601String(),
-    };
   }
 
   String get formattedValue {

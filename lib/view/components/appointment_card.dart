@@ -44,7 +44,7 @@ class AppointmentCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    appointment.user, 
+                    appointment.professionalName,
                     style: TextStyle(
                       color: colors.surface, 
                       fontSize: 18,
