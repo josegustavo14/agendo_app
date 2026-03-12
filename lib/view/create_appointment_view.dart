@@ -180,7 +180,7 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
                   Text(
                     _isProfessional ? 'Cliente' : 'Profissional',
                     style: TextStyle(
-                      color: colors.onSurface.withOpacity(0.7),
+                      color: colors.onSurface.withValues(alpha: 0.7),
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -193,7 +193,7 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
                   Text(
                     'Tipo de Serviço',
                     style: TextStyle(
-                      color: colors.onSurface.withOpacity(0.7),
+                      color: colors.onSurface.withValues(alpha: 0.7),
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -206,7 +206,7 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
                   Text(
                     'Valor (R\$)',
                     style: TextStyle(
-                      color: colors.onSurface.withOpacity(0.7),
+                      color: colors.onSurface.withValues(alpha: 0.7),
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -239,7 +239,7 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
                   Text(
                     'Data e Horário',
                     style: TextStyle(
-                      color: colors.onSurface.withOpacity(0.7),
+                      color: colors.onSurface.withValues(alpha: 0.7),
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -264,7 +264,7 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      disabledBackgroundColor: colors.primary.withOpacity(0.5),
+                      disabledBackgroundColor: colors.primary.withValues(alpha: 0.5),
                     ),
                     child: _viewModel.isSubmitting
                         ? SizedBox(
@@ -298,7 +298,7 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: colors.onSurface.withOpacity(0.05),
+        color: colors.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: DropdownButtonHideUnderline(
@@ -307,11 +307,11 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
           isExpanded: true,
           hint: Text(
             _isProfessional ? 'Selecione o cliente' : 'Selecione o profissional',
-            style: TextStyle(color: colors.onSurface.withOpacity(0.5)),
+            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.5)),
           ),
           dropdownColor: colors.surface,
           style: TextStyle(color: colors.onSurface),
-          icon: Icon(Icons.keyboard_arrow_down, color: colors.onSurface.withOpacity(0.5)),
+          icon: Icon(Icons.keyboard_arrow_down, color: colors.onSurface.withValues(alpha: 0.5)),
           items: users.map((user) {
             return DropdownMenuItem(
               value: user,
@@ -328,7 +328,7 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: colors.onSurface.withOpacity(0.05),
+        color: colors.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: DropdownButtonHideUnderline(
@@ -337,11 +337,11 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
           isExpanded: true,
           hint: Text(
             'Selecione o serviço',
-            style: TextStyle(color: colors.onSurface.withOpacity(0.5)),
+            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.5)),
           ),
           dropdownColor: colors.surface,
           style: TextStyle(color: colors.onSurface),
-          icon: Icon(Icons.keyboard_arrow_down, color: colors.onSurface.withOpacity(0.5)),
+          icon: Icon(Icons.keyboard_arrow_down, color: colors.onSurface.withValues(alpha: 0.5)),
           items: _viewModel.serviceTypes.map((service) {
             return DropdownMenuItem(
               value: service,
@@ -360,12 +360,12 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
-          color: colors.onSurface.withOpacity(0.05),
+          color: colors.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           children: [
-            Icon(Icons.calendar_today, size: 20, color: colors.onSurface.withOpacity(0.5)),
+            Icon(Icons.calendar_today, size: 20, color: colors.onSurface.withValues(alpha: 0.5)),
             const SizedBox(width: 8),
             Text(
               _selectedDate != null
@@ -374,7 +374,7 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
               style: TextStyle(
                 color: _selectedDate != null
                     ? colors.onSurface
-                    : colors.onSurface.withOpacity(0.5),
+                    : colors.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -389,12 +389,12 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
-          color: colors.onSurface.withOpacity(0.05),
+          color: colors.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           children: [
-            Icon(Icons.access_time, size: 20, color: colors.onSurface.withOpacity(0.5)),
+            Icon(Icons.access_time, size: 20, color: colors.onSurface.withValues(alpha: 0.5)),
             const SizedBox(width: 8),
             Text(
               _selectedTime != null
@@ -403,7 +403,7 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
               style: TextStyle(
                 color: _selectedTime != null
                     ? colors.onSurface
-                    : colors.onSurface.withOpacity(0.5),
+                    : colors.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -415,9 +415,9 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
   InputDecoration _inputDecoration(ColorScheme colors, {required String hint}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: colors.onSurface.withOpacity(0.5)),
+      hintStyle: TextStyle(color: colors.onSurface.withValues(alpha: 0.5)),
       filled: true,
-      fillColor: colors.onSurface.withOpacity(0.05),
+      fillColor: colors.onSurface.withValues(alpha: 0.05),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,

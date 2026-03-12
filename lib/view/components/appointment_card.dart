@@ -54,11 +54,11 @@ class AppointmentCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.access_time, size: 16, color: colors.surface.withOpacity(0.6)),
+                      Icon(Icons.access_time, size: 16, color: colors.surface.withValues(alpha: 0.6)),
                       const SizedBox(width: 4),
                       Text(
                         dateText,
-                        style: TextStyle(color: colors.surface.withOpacity(0.7)),
+                        style: TextStyle(color: colors.surface.withValues(alpha: 0.7)),
                       ),
                     ],
                   ),
@@ -80,7 +80,7 @@ class AppointmentCard extends StatelessWidget {
               width: 70,
               height: 70,
               decoration: BoxDecoration(
-                color: colors.surface.withOpacity(0.1),
+                color: colors.surface.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 image: const DecorationImage(
                   image: NetworkImage("https://www.w3schools.com/howto/img_avatar.png"), // Foto padrão

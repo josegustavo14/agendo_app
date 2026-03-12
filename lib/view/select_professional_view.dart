@@ -40,10 +40,12 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
     try {
       final repo = context.read<ProfessionalRepository>();
       final professions = await repo.fetchProfessions();
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _professions = professions;
         _isLoadingProfessions = false;
       });
+      }
     } catch (_) {
       if (mounted) setState(() => _isLoadingProfessions = false);
     }
@@ -59,12 +61,25 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
             : null,
         professionId: _selectedProfessionId,
       );
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _professionals = professionals;
         _isLoadingProfessionals = false;
       });
+      }
     } catch (_) {
       if (mounted) setState(() => _isLoadingProfessionals = false);
+    }
+  }
+
+  Future<void> _navigateToBook(int index) async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => BookAppointmentView(professional: _professionals[index]),
+      ),
+    );
+    if (created == true && mounted) {
+      Navigator.of(context).pop(true);
     }
   }
 
@@ -110,11 +125,11 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
               style: TextStyle(color: colors.onSurface),
               decoration: InputDecoration(
                 hintText: 'Buscar profissional...',
-                hintStyle: TextStyle(color: colors.onSurface.withOpacity(0.4)),
-                prefixIcon: Icon(Icons.search, color: colors.onSurface.withOpacity(0.4)),
+                hintStyle: TextStyle(color: colors.onSurface.withValues(alpha: 0.4)),
+                prefixIcon: Icon(Icons.search, color: colors.onSurface.withValues(alpha: 0.4)),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: Icon(Icons.clear, color: colors.onSurface.withOpacity(0.4)),
+                        icon: Icon(Icons.clear, color: colors.onSurface.withValues(alpha: 0.4)),
                         onPressed: () {
                           _searchController.clear();
                           _searchProfessionals();
@@ -122,7 +137,7 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
                       )
                     : null,
                 filled: true,
-                fillColor: colors.onSurface.withOpacity(0.05),
+                fillColor: colors.onSurface.withValues(alpha: 0.05),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -143,7 +158,7 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 itemCount: _professions.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
                   final profession = _professions[index];
                   final isSelected = _selectedProfessionId == profession.id;
@@ -152,7 +167,7 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
                     selected: isSelected,
                     onSelected: (_) => _onProfessionTap(profession.id),
                     selectedColor: colors.primary,
-                    backgroundColor: colors.onSurface.withOpacity(0.05),
+                    backgroundColor: colors.onSurface.withValues(alpha: 0.05),
                     labelStyle: TextStyle(
                       color: isSelected ? colors.onPrimary : colors.onSurface,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -179,28 +194,36 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
                     ? Center(
                         child: Text(
                           'Nenhum profissional encontrado',
-                          style: TextStyle(color: colors.onSurface.withOpacity(0.5)),
+                          style: TextStyle(color: colors.onSurface.withValues(alpha: 0.5)),
                         ),
                       )
-                    : ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        itemCount: _professionals.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          return _ProfessionalCard(
-                            professional: _professionals[index],
-                            onTap: () async {
-                              final created = await Navigator.of(context).push<bool>(
-                                MaterialPageRoute(
-                                  builder: (_) => BookAppointmentView(
-                                    professional: _professionals[index],
-                                  ),
-                                ),
-                              );
-                              if (created == true && mounted) {
-                                Navigator.of(context).pop(true);
-                              }
-                            },
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isWide = constraints.maxWidth >= 800;
+                          if (isWide) {
+                            return GridView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: constraints.maxWidth >= 1200 ? 3 : 2,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 2.4,
+                              ),
+                              itemCount: _professionals.length,
+                              itemBuilder: (context, index) => _ProfessionalCard(
+                                professional: _professionals[index],
+                                onTap: () => _navigateToBook(index),
+                              ),
+                            );
+                          }
+                          return ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            itemCount: _professionals.length,
+                            separatorBuilder: (_, _) => const SizedBox(height: 12),
+                            itemBuilder: (context, index) => _ProfessionalCard(
+                              professional: _professionals[index],
+                              onTap: () => _navigateToBook(index),
+                            ),
                           );
                         },
                       ),
@@ -234,7 +257,7 @@ class _ProfessionalCard extends StatelessWidget {
               // Avatar
               CircleAvatar(
                 radius: 28,
-                backgroundColor: colors.primary.withOpacity(0.2),
+                backgroundColor: colors.primary.withValues(alpha: 0.2),
                 child: Text(
                   professional.name.isNotEmpty ? professional.name[0].toUpperCase() : '?',
                   style: TextStyle(
@@ -276,7 +299,7 @@ class _ProfessionalCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: colors.surface.withOpacity(0.6),
+                          color: colors.surface.withValues(alpha: 0.6),
                           fontSize: 13,
                         ),
                       ),
@@ -308,7 +331,7 @@ class _ProfessionalCard extends StatelessWidget {
                   Text(
                     'R\$ ${professional.hourlyRate.toStringAsFixed(0)}/h',
                     style: TextStyle(
-                      color: colors.surface.withOpacity(0.7),
+                      color: colors.surface.withValues(alpha: 0.7),
                       fontSize: 12,
                     ),
                   ),
@@ -316,7 +339,7 @@ class _ProfessionalCard extends StatelessWidget {
               ),
 
               const SizedBox(width: 4),
-              Icon(Icons.chevron_right, color: colors.surface.withOpacity(0.4)),
+              Icon(Icons.chevron_right, color: colors.surface.withValues(alpha: 0.4)),
             ],
           ),
         ),

@@ -34,10 +34,12 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
     try {
       final repo = context.read<ProfessionalRepository>();
       final services = await repo.getProfessionalServices(widget.professional.id);
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _services = services;
         _isLoadingServices = false;
       });
+      }
     } catch (_) {
       if (mounted) setState(() => _isLoadingServices = false);
     }
@@ -82,6 +84,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
     // Valor baseado na taxa horária do profissional (1h por padrão)
     final valueInCents = (widget.professional.hourlyRate * 100).round();
 
+
     try {
       final repo = context.read<AppointmentRepository>();
       await repo.createAppointment(
@@ -115,83 +118,111 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
     final colors = Theme.of(context).colorScheme;
     final pro = widget.professional;
 
+    final isWide = MediaQuery.of(context).size.width >= 900;
+
+    final confirmButton = Padding(
+      padding: const EdgeInsets.all(24),
+      child: ElevatedButton(
+        onPressed: (_canSubmit && !_isSubmitting) ? _handleSubmit : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colors.primary,
+          foregroundColor: colors.onPrimary,
+          minimumSize: const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          disabledBackgroundColor: colors.primary.withValues(alpha: 0.3),
+        ),
+        child: _isSubmitting
+            ? SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: colors.onPrimary))
+            : const Text('Confirmar Agendamento', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      ),
+    );
+
+    if (isWide) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(icon: Icon(Icons.arrow_back, color: colors.onSurface), onPressed: () => Navigator.of(context).pop()),
+          title: Text('Novo Agendamento', style: TextStyle(color: colors.onSurface, fontWeight: FontWeight.bold)),
+          centerTitle: false,
+        ),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left: professional + services
+                  Expanded(
+                    flex: 5,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildProfessionalHeader(colors, pro),
+                          const SizedBox(height: 28),
+                          Text('Selecione o serviço', style: TextStyle(color: colors.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 12),
+                          _buildServicesList(colors),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 32),
+                  // Right: date, time, summary, button
+                  Expanded(
+                    flex: 4,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text('Data e Horário', style: TextStyle(color: colors.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(child: _buildDateButton(colors)),
+                            const SizedBox(width: 12),
+                            Expanded(child: _buildTimeButton(colors)),
+                          ],
+                        ),
+                        const SizedBox(height: 28),
+                        if (_canSubmit) _buildSummary(colors, pro),
+                        const SizedBox(height: 16),
+                        confirmButton,
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colors.onSurface),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: colors.onSurface), onPressed: () => Navigator.of(context).pop()),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(24),
-        child: ElevatedButton(
-          onPressed: (_canSubmit && !_isSubmitting) ? _handleSubmit : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colors.primary,
-            foregroundColor: colors.onPrimary,
-            minimumSize: const Size(double.infinity, 56),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            disabledBackgroundColor: colors.primary.withOpacity(0.3),
-          ),
-          child: _isSubmitting
-              ? SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: colors.onPrimary,
-                  ),
-                )
-              : const Text(
-                  'Confirmar Agendamento',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-        ),
-      ),
+      bottomNavigationBar: confirmButton,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Perfil do profissional
             _buildProfessionalHeader(colors, pro),
             const SizedBox(height: 28),
-
-            // Serviços
-            Text(
-              'Selecione o serviço',
-              style: TextStyle(
-                color: colors.onSurface,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('Selecione o serviço', style: TextStyle(color: colors.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             _buildServicesList(colors),
             const SizedBox(height: 28),
-
-            // Data e Hora
-            Text(
-              'Data e Horário',
-              style: TextStyle(
-                color: colors.onSurface,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('Data e Horário', style: TextStyle(color: colors.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _buildDateButton(colors)),
-                const SizedBox(width: 12),
-                Expanded(child: _buildTimeButton(colors)),
-              ],
-            ),
+            Row(children: [Expanded(child: _buildDateButton(colors)), const SizedBox(width: 12), Expanded(child: _buildTimeButton(colors))]),
             const SizedBox(height: 28),
-
-            // Resumo
             if (_canSubmit) _buildSummary(colors, pro),
             const SizedBox(height: 24),
           ],
@@ -211,7 +242,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
           children: [
             CircleAvatar(
               radius: 34,
-              backgroundColor: colors.primary.withOpacity(0.2),
+              backgroundColor: colors.primary.withValues(alpha: 0.2),
               child: Text(
                 pro.name[0].toUpperCase(),
                 style: TextStyle(
@@ -250,7 +281,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: colors.surface.withOpacity(0.6),
+                        color: colors.surface.withValues(alpha: 0.6),
                         fontSize: 13,
                       ),
                     ),
@@ -271,7 +302,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                       Text(
                         'R\$ ${pro.hourlyRate.toStringAsFixed(2).replaceAll('.', ',')}/h',
                         style: TextStyle(
-                          color: colors.surface.withOpacity(0.7),
+                          color: colors.surface.withValues(alpha: 0.7),
                           fontSize: 13,
                         ),
                       ),
@@ -301,7 +332,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
         padding: const EdgeInsets.all(16),
         child: Text(
           'Nenhum serviço disponível',
-          style: TextStyle(color: colors.onSurface.withOpacity(0.5)),
+          style: TextStyle(color: colors.onSurface.withValues(alpha: 0.5)),
         ),
       );
     }
@@ -316,8 +347,8 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: isSelected
-                  ? colors.primary.withOpacity(0.12)
-                  : colors.onSurface.withOpacity(0.05),
+                  ? colors.primary.withValues(alpha: 0.12)
+                  : colors.onSurface.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: isSelected ? colors.primary : Colors.transparent,
@@ -331,13 +362,13 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? colors.primary.withOpacity(0.2)
-                        : colors.onSurface.withOpacity(0.08),
+                        ? colors.primary.withValues(alpha: 0.2)
+                        : colors.onSurface.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     Icons.design_services,
-                    color: isSelected ? colors.primary : colors.onSurface.withOpacity(0.5),
+                    color: isSelected ? colors.primary : colors.onSurface.withValues(alpha: 0.5),
                     size: 20,
                   ),
                 ),
@@ -360,7 +391,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: colors.onSurface.withOpacity(0.5),
+                            color: colors.onSurface.withValues(alpha: 0.5),
                             fontSize: 13,
                           ),
                         ),
@@ -385,8 +416,8 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
           color: hasDate
-              ? colors.primary.withOpacity(0.12)
-              : colors.onSurface.withOpacity(0.05),
+              ? colors.primary.withValues(alpha: 0.12)
+              : colors.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: hasDate ? colors.primary : Colors.transparent,
@@ -398,7 +429,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
             Icon(
               Icons.calendar_today,
               size: 20,
-              color: hasDate ? colors.primary : colors.onSurface.withOpacity(0.5),
+              color: hasDate ? colors.primary : colors.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(width: 10),
             Text(
@@ -406,7 +437,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                   ? '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}'
                   : 'Selecionar data',
               style: TextStyle(
-                color: hasDate ? colors.onSurface : colors.onSurface.withOpacity(0.5),
+                color: hasDate ? colors.onSurface : colors.onSurface.withValues(alpha: 0.5),
                 fontWeight: hasDate ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
@@ -424,8 +455,8 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
           color: hasTime
-              ? colors.primary.withOpacity(0.12)
-              : colors.onSurface.withOpacity(0.05),
+              ? colors.primary.withValues(alpha: 0.12)
+              : colors.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: hasTime ? colors.primary : Colors.transparent,
@@ -437,7 +468,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
             Icon(
               Icons.access_time,
               size: 20,
-              color: hasTime ? colors.primary : colors.onSurface.withOpacity(0.5),
+              color: hasTime ? colors.primary : colors.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(width: 10),
             Text(
@@ -445,7 +476,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                   ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
                   : 'Selecionar horário',
               style: TextStyle(
-                color: hasTime ? colors.onSurface : colors.onSurface.withOpacity(0.5),
+                color: hasTime ? colors.onSurface : colors.onSurface.withValues(alpha: 0.5),
                 fontWeight: hasTime ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
@@ -466,9 +497,9 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colors.primary.withOpacity(0.08),
+        color: colors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.primary.withOpacity(0.3)),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -499,7 +530,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
         children: [
           Text(
             label,
-            style: TextStyle(color: colors.onSurface.withOpacity(0.6), fontSize: 14),
+            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.6), fontSize: 14),
           ),
           Text(
             value,

@@ -58,19 +58,27 @@ class _HomeViewState extends State<HomeView> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // Se a tela for larga (ex: Web ou iPad), divide lateralmente
-          if (constraints.maxWidth > 800) {
-            return Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _buildHeader(context, colors, clientName, isLateral: true),
+          final isWide = constraints.maxWidth > 800;
+
+          if (isWide) {
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1400),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Sidebar esquerda com saudação
+                    SizedBox(
+                      width: 300,
+                      child: _buildHeader(context, colors, clientName, isLateral: true),
+                    ),
+                    // Lista de agendamentos com scroll próprio
+                    Expanded(
+                      child: _buildScrollableContent(viewModel, colors, isWide: true),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  flex: 3,
-                  child: _buildScrollableContent(viewModel, colors),
-                ),
-              ],
+              ),
             );
           }
 
@@ -117,7 +125,7 @@ class _HomeViewState extends State<HomeView> {
           const SizedBox(height: 12),
           Text(
             "Meus Agendamentos:",
-            style: TextStyle(color: colors.onSurface.withOpacity(0.6)),
+            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.6)),
           ),
           if (isLateral) const SizedBox(height: 20),
         ],
@@ -126,28 +134,38 @@ class _HomeViewState extends State<HomeView> {
   }
 
   // Widget da Lista de Cards
-  Widget _buildScrollableContent(HomeViewModel viewModel, ColorScheme colors) {
-  if (viewModel.isLoading) {
+  Widget _buildScrollableContent(HomeViewModel viewModel, ColorScheme colors, {bool isWide = false}) {
+    if (viewModel.isLoading) {
+      final skeletons = [
+        const AppointmentCardSkeleton(),
+        const AppointmentCardSkeleton(),
+        const AppointmentCardSkeleton(),
+      ];
+
+      if (isWide) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 32, right: 32),
+          child: Column(children: skeletons),
+        );
+      }
+      return Padding(
+        padding: const EdgeInsets.only(top: 16),
+        child: Column(children: skeletons),
+      );
+    }
+
+    final cards = viewModel.appointments.map((a) => AppointmentCard(appointment: a)).toList();
+
+    if (isWide) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.only(top: 32, right: 32, bottom: 24),
+        child: Column(children: cards),
+      );
+    }
+
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
-      child: Column(
-        // Mostra 3 cards de esqueleto "piscando"
-        children: const [
-          AppointmentCardSkeleton(),
-          AppointmentCardSkeleton(),
-          AppointmentCardSkeleton(),
-        ],
-      ),
+      padding: const EdgeInsets.only(top: 16, bottom: 24),
+      child: Column(children: cards),
     );
   }
-
-  return Padding(
-    padding: const EdgeInsets.only(top: 16, bottom: 24),
-    child: Column(
-      children: viewModel.appointments.map((appointment) {
-        return AppointmentCard(appointment: appointment);
-      }).toList(),
-    ),
-  );
-}
 }
