@@ -17,9 +17,11 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint('Fetching appointments...');
       appointments = await repository.fetchAppointments();
     } catch (e) {
       errorMessage = 'Erro ao carregar agendamentos';
+      debugPrint('Error fetching appointments: $e');
     } finally {
       isLoading = false;
       notifyListeners();

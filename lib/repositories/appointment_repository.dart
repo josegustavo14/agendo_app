@@ -20,8 +20,7 @@ class AppointmentRepository {
       throw Exception('Erro ao buscar agendamentos');
     }
   }
-
-  Future<AppointmentModel> createAppointment({
+Future<AppointmentModel> createAppointment({
     required int professionalId,
     required int clientId,
     required int serviceTypeId,
