@@ -23,4 +23,14 @@ class UserRepository {
       throw Exception('Erro ao buscar usuários');
     }
   }
+
+  Future<UserModel> getMe() async {
+    final response = await apiService.get('/users/me');
+
+    if (response.statusCode == 200) {
+      return UserModel.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Erro ao buscar perfil');
+    }
+  }
 }
