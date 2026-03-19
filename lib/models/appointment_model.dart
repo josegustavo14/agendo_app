@@ -2,19 +2,21 @@ class AppointmentModel {
   final int id;
   final String professionalName;
   final String clientName;
-  final String serviceType;
-  final int value;
+  final List<String> services;
+  final double totalAmount;
   final DateTime scheduleDate;
   final DateTime requestDate;
+  final String status;
 
   AppointmentModel({
     required this.id,
     required this.professionalName,
     required this.clientName,
-    required this.serviceType,
-    required this.value,
+    required this.services,
+    required this.totalAmount,
     required this.scheduleDate,
     required this.requestDate,
+    required this.status,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
@@ -22,14 +24,17 @@ class AppointmentModel {
       id: json['id'] as int,
       professionalName: json['professional']['name'] as String,
       clientName: json['client']['name'] as String,
-      serviceType: json['serviceType']['name'] as String,
-      value: json['valueInCents'] as int,
+      services: (json['services'] as List<dynamic>)
+          .map((s) => s['name'] as String)
+          .toList(),
+      totalAmount: (json['totalAmount'] as num).toDouble(),
       scheduleDate: DateTime.parse(json['scheduleDate'] as String),
       requestDate: DateTime.parse(json['requestDate'] as String),
+      status: json['status'] as String,
     );
   }
 
   String get formattedValue {
-    return 'R\$ ${(value / 100).toStringAsFixed(2).replaceAll('.', ',')}';
+    return 'R\$ ${totalAmount.toStringAsFixed(2).replaceAll('.', ',')}';
   }
 }

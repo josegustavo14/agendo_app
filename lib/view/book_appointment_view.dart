@@ -81,17 +81,12 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
       _selectedTime!.minute,
     );
 
-    // Valor baseado na taxa horária do profissional (1h por padrão)
-    final valueInCents = (widget.professional.hourlyRate * 100).round();
-
-
     try {
       final repo = context.read<AppointmentRepository>();
       await repo.createAppointment(
         professionalId: widget.professional.id,
         clientId: authUser.id,
-        serviceTypeId: _selectedService!.id,
-        valueInCents: valueInCents,
+        serviceTypeIds: [_selectedService!.id],
         scheduleDate: scheduleDate,
       );
 

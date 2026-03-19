@@ -34,7 +34,7 @@ class AppointmentCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    appointment.serviceType.toUpperCase(),
+                    appointment.services.join(', ').toUpperCase(),
                     style: TextStyle(
                       color: colors.primary, 
                       fontWeight: FontWeight.bold,

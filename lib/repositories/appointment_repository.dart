@@ -20,18 +20,16 @@ class AppointmentRepository {
       throw Exception('Erro ao buscar agendamentos');
     }
   }
-Future<AppointmentModel> createAppointment({
+  Future<AppointmentModel> createAppointment({
     required int professionalId,
     required int clientId,
-    required int serviceTypeId,
-    required int valueInCents,
+    required List<int> serviceTypeIds,
     required DateTime scheduleDate,
   }) async {
     final response = await apiService.post('/appointments', body: {
       'professionalId': professionalId,
       'clientId': clientId,
-      'serviceTypeId': serviceTypeId,
-      'valueInCents': valueInCents,
+      'serviceTypeIds': serviceTypeIds,
       'scheduleDate': scheduleDate.toIso8601String(),
     });
 
