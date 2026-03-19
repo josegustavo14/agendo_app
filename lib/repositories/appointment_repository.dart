@@ -11,7 +11,10 @@ class AppointmentRepository {
     final queryParams = <String, String>{};
     if (role != null) queryParams['role'] = role;
 
-    final response = await apiService.get('/appointments', queryParams: queryParams.isNotEmpty ? queryParams : null);
+    final response = await apiService.get(
+      '/appointments',
+      queryParams: queryParams.isNotEmpty ? queryParams : null,
+    );
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -20,6 +23,7 @@ class AppointmentRepository {
       throw Exception('Erro ao buscar agendamentos');
     }
   }
+
   Future<AppointmentModel> createAppointment({
     required int professionalId,
     required int clientId,
@@ -38,5 +42,37 @@ class AppointmentRepository {
     } else {
       throw Exception('Erro ao criar agendamento');
     }
+  }
+
+  Future<AppointmentModel> approveAppointment(int id) async {
+    final response = await apiService.patch('/appointments/$id/approve');
+    if (response.statusCode == 200) {
+      return AppointmentModel.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Erro ao aprovar agendamento');
+  }
+
+  Future<AppointmentModel> rejectAppointment(int id) async {
+    final response = await apiService.patch('/appointments/$id/reject');
+    if (response.statusCode == 200) {
+      return AppointmentModel.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Erro ao rejeitar agendamento');
+  }
+
+  Future<AppointmentModel> cancelAppointment(int id) async {
+    final response = await apiService.patch('/appointments/$id/cancel');
+    if (response.statusCode == 200) {
+      return AppointmentModel.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Erro ao cancelar agendamento');
+  }
+
+  Future<AppointmentModel> completeAppointment(int id) async {
+    final response = await apiService.patch('/appointments/$id/complete');
+    if (response.statusCode == 200) {
+      return AppointmentModel.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Erro ao concluir agendamento');
   }
 }
