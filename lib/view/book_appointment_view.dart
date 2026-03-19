@@ -5,6 +5,8 @@ import 'package:agendo/models/service_type_model.dart';
 import 'package:agendo/repositories/professional_repository.dart';
 import 'package:agendo/repositories/appointment_repository.dart';
 import 'package:agendo/view_models/auth_view_model.dart';
+import 'package:agendo/view_models/rating_view_model.dart';
+import 'components/rating_bar_widget.dart';
 
 class BookAppointmentView extends StatefulWidget {
   final ProfessionalModel professional;
@@ -27,7 +29,10 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadServices());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadServices();
+      context.read<RatingViewModel>().loadRatings(widget.professional.id);
+    });
   }
 
   Future<void> _loadServices() async {
@@ -282,27 +287,35 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                     ),
                   ],
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.star, size: 16, color: Colors.amber),
-                      const SizedBox(width: 4),
-                      Text(
-                        pro.ratingAverage.toStringAsFixed(1),
-                        style: TextStyle(
-                          color: colors.surface,
-                          fontWeight: FontWeight.bold,
+                  Builder(builder: (ctx) {
+                    final ratingVm = ctx.watch<RatingViewModel>();
+                    final average = ratingVm.averageFor(pro.id);
+                    final isLoading = ratingVm.isLoadingFor(pro.id);
+                    return Row(
+                      children: [
+                        if (isLoading)
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 1.5, color: Colors.amber),
+                          )
+                        else
+                          RatingBarWidget(
+                              rating: average ?? 0.0, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          average != null
+                              ? average.toStringAsFixed(1)
+                              : 'Sem avaliações',
+                          style: TextStyle(
+                            color: colors.surface.withValues(alpha: 0.8),
+                            fontSize: 13,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        'R\$ ${pro.hourlyRate.toStringAsFixed(2).replaceAll('.', ',')}/h',
-                        style: TextStyle(
-                          color: colors.surface.withValues(alpha: 0.7),
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    );
+                  }),
                 ],
               ),
             ),
@@ -393,6 +406,18 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                     ],
                   ),
                 ),
+                if (service.price != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text(
+                      service.formattedPrice,
+                      style: TextStyle(
+                        color: isSelected ? colors.primary : colors.onSurface,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
                 if (isSelected)
                   Icon(Icons.check_circle, color: colors.primary, size: 22),
               ],
@@ -482,7 +507,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
   }
 
   Widget _buildSummary(ColorScheme colors, ProfessionalModel pro) {
-    final valueInCents = (pro.hourlyRate * 100).round();
+    final valueInCents = ((pro.hourlyRate ?? 0.0) * 100).round();
     final formattedValue = 'R\$ ${(valueInCents / 100).toStringAsFixed(2).replaceAll('.', ',')}';
     final dateStr =
         '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}';
