@@ -17,8 +17,7 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      debugPrint('Fetching appointments...');
-      appointments = await repository.fetchAppointments();
+      appointments = await repository.fetchAppointments(role: 'client');
     } catch (e) {
       errorMessage = 'Erro ao carregar agendamentos';
       debugPrint('Error fetching appointments: $e');
@@ -26,5 +25,16 @@ class HomeViewModel extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> cancelAppointment(int id) async {
+    try {
+      final updated = await repository.cancelAppointment(id);
+      final idx = appointments.indexWhere((a) => a.id == updated.id);
+      if (idx != -1) {
+        appointments[idx] = updated;
+        notifyListeners();
+      }
+    } catch (_) {}
   }
 }
