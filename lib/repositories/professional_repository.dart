@@ -32,17 +32,23 @@ class ProfessionalRepository {
       queryParams['serviceTypeName'] = serviceTypeName;
     }
 
-    final response = await apiService.get(
-      '/professionals',
-      queryParams: queryParams.isNotEmpty ? queryParams : null,
-    );
-
-    if (response.statusCode == 200) {
+    try {
+      final response = await apiService.get(
+        '/professionals',
+        queryParams: queryParams.isNotEmpty ? queryParams : null,
+      );
+      if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => ProfessionalModel.fromJson(json)).toList();
     } else {
+      print('Error searching professionals: ${response.statusCode} - ${response.body}');
       throw Exception('Erro ao buscar profissionais');
     }
+    } catch (e) {
+      print('Error searching professionals: $e');
+      throw Exception('Erro ao buscar profissionais');
+    }
+
   }
 
   Future<ProfessionalModel> getProfessional(int id) async {
