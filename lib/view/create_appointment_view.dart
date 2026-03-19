@@ -106,8 +106,6 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
     }
 
     final authUser = context.read<AuthViewModel>().user!;
-    final valueText = _valueController.text.replaceAll(',', '.').replaceAll('R\$', '').trim();
-    final valueInCents = (double.parse(valueText) * 100).round();
 
     final scheduleDate = DateTime(
       _selectedDate!.year,
@@ -120,8 +118,7 @@ class _CreateAppointmentViewState extends State<CreateAppointmentView> {
     final success = await _viewModel.createAppointment(
       professionalId: _isProfessional ? authUser.id : _selectedUser!.id,
       clientId: _isProfessional ? _selectedUser!.id : authUser.id,
-      serviceTypeId: _selectedService!.id,
-      valueInCents: valueInCents,
+      serviceTypeIds: [_selectedService!.id],
       scheduleDate: scheduleDate,
     );
 

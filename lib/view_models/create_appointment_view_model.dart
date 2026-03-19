@@ -58,8 +58,7 @@ class CreateAppointmentViewModel extends ChangeNotifier {
   Future<bool> createAppointment({
     required int professionalId,
     required int clientId,
-    required int serviceTypeId,
-    required int valueInCents,
+    required List<int> serviceTypeIds,
     required DateTime scheduleDate,
   }) async {
     isSubmitting = true;
@@ -70,8 +69,7 @@ class CreateAppointmentViewModel extends ChangeNotifier {
       await appointmentRepository.createAppointment(
         professionalId: professionalId,
         clientId: clientId,
-        serviceTypeId: serviceTypeId,
-        valueInCents: valueInCents,
+        serviceTypeIds: serviceTypeIds,
         scheduleDate: scheduleDate,
       );
       return true;
