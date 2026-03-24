@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:agendo/models/user_model.dart';
 import 'package:agendo/repositories/auth_repository.dart';
+import 'package:agendo/repositories/user_repository.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository repository;
+  final UserRepository userRepository;
 
-  AuthViewModel({required this.repository});
+  AuthViewModel({required this.repository, required this.userRepository});
 
   UserModel? _user;
   bool isLoading = false;
@@ -21,6 +23,8 @@ class AuthViewModel extends ChangeNotifier {
 
     try {
       _user = await repository.login(email, password);
+      // Busca perfil completo com professionalProfile/clientProfile
+      _user = await userRepository.getMe();
       return true;
     } catch (e) {
       errorMessage = 'Email ou senha inválidos';

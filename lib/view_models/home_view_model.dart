@@ -11,18 +11,50 @@ class HomeViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  Future<void> loadAppointments() async {
+  Future<void> loadAppointments({bool isProfessional = false}) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
-      appointments = await repository.fetchAppointments();
+      if (isProfessional) {
+        appointments = await repository.fetchProfessionalAppointments();
+      } else {
+        appointments = await repository.fetchAppointments();
+      }
     } catch (e) {
       errorMessage = 'Erro ao carregar agendamentos';
     } finally {
       isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<bool> approveAppointment(int id) async {
+    try {
+      final updated = await repository.approveAppointment(id);
+      final index = appointments.indexWhere((a) => a.id == id);
+      if (index != -1) {
+        appointments[index] = updated;
+        notifyListeners();
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> rejectAppointment(int id) async {
+    try {
+      final updated = await repository.rejectAppointment(id);
+      final index = appointments.indexWhere((a) => a.id == id);
+      if (index != -1) {
+        appointments[index] = updated;
+        notifyListeners();
+      }
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 }

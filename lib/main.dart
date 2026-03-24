@@ -27,6 +27,7 @@ void main() {
         ChangeNotifierProvider(
           create: (context) => AuthViewModel(
             repository: context.read<AuthRepository>(),
+            userRepository: context.read<UserRepository>(),
           ),
         ),
         ChangeNotifierProvider(
