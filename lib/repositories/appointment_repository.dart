@@ -7,17 +7,27 @@ class AppointmentRepository {
 
   AppointmentRepository({required this.apiService});
 
-  Future<List<AppointmentModel>> fetchAppointments({String? role}) async {
-    final queryParams = <String, String>{};
-    if (role != null) queryParams['role'] = role;
+  Future<List<AppointmentModel>> fetchAppointments() async {
+    final response = await apiService.get('/appointments');
 
-    final response = await apiService.get('/appointments', queryParams: queryParams.isNotEmpty ? queryParams : null);
+    if (response.statusCode == 200) {
+      print('Appointments fetched successfully: ${response.body}');
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => AppointmentModel.fromJson(json)).toList();
+    } else {
+      print('Error fetching appointments: ${response.statusCode} - ${response.body}');
+      throw Exception('Erro ao buscar agendamentos');
+    }
+  }
+
+  Future<List<AppointmentModel>> fetchProfessionalAppointments() async {
+    final response = await apiService.get('/appointments/professional');
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => AppointmentModel.fromJson(json)).toList();
     } else {
-      throw Exception('Erro ao buscar agendamentos');
+      throw Exception('Erro ao buscar agendamentos do profissional');
     }
   }
 
@@ -41,5 +51,21 @@ class AppointmentRepository {
     } else {
       throw Exception('Erro ao criar agendamento');
     }
+  }
+
+  Future<AppointmentModel> approveAppointment(int id) async {
+    final response = await apiService.patch('/appointments/$id/approve');
+    if (response.statusCode == 200) {
+      return AppointmentModel.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Erro ao aprovar agendamento');
+  }
+
+  Future<AppointmentModel> rejectAppointment(int id) async {
+    final response = await apiService.patch('/appointments/$id/reject');
+    if (response.statusCode == 200) {
+      return AppointmentModel.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Erro ao recusar agendamento');
   }
 }

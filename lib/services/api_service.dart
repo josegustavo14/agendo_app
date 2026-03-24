@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080';
+  static const String baseUrl = 'http://localhost:9090';
 
   String? _token;
 
@@ -29,5 +29,10 @@ class ApiService {
   Future<http.Response> post(String path, {Map<String, dynamic>? body}) {
     final uri = Uri.parse('$baseUrl$path');
     return http.post(uri, headers: _headers, body: jsonEncode(body));
+  }
+
+  Future<http.Response> patch(String path, {Map<String, dynamic>? body}) {
+    final uri = Uri.parse('$baseUrl$path');
+    return http.patch(uri, headers: _headers, body: jsonEncode(body ?? {}));
   }
 }
