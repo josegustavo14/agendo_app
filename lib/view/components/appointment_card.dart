@@ -8,6 +8,7 @@ class AppointmentCard extends StatelessWidget {
   final bool showClient;
   final VoidCallback? onApprove;
   final VoidCallback? onReject;
+  final VoidCallback? onRate;
 
   const AppointmentCard({
     super.key,
@@ -16,6 +17,7 @@ class AppointmentCard extends StatelessWidget {
     this.showClient = false,
     this.onApprove,
     this.onReject,
+    this.onRate,
   });
 
   @override
@@ -141,6 +143,22 @@ class AppointmentCard extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.blue,
                       side: const BorderSide(color: Colors.blue),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+              ],
+              if (appointment.isCompleted && onRate != null) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: onRate,
+                    icon: const Icon(Icons.star_outline, size: 18),
+                    label: const Text('Ver avaliações / Avaliar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black87,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),

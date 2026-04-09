@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/rating_model.dart';
 import '../view_models/rating_view_model.dart';
 import '../view_models/auth_view_model.dart';
 import 'components/rating_bar_widget.dart';
@@ -25,6 +26,7 @@ class _RatingsViewState extends State<RatingsView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      debugPrint('[RatingsView] Carregando avaliações para professionalId=${widget.professionalId}');
       context.read<RatingViewModel>().loadRatings(widget.professionalId);
     });
   }
@@ -155,7 +157,7 @@ class _RatingsViewState extends State<RatingsView> {
 }
 
 class _RatingCard extends StatelessWidget {
-  final dynamic rating;
+  final RatingModel rating;
   const _RatingCard({required this.rating});
 
   @override
@@ -196,7 +198,7 @@ class _RatingCard extends StatelessWidget {
           ],
           const SizedBox(height: 6),
           Text(
-            '${rating.createdAt.day}/${rating.createdAt.month}/${rating.createdAt.year}',
+            '${rating.createdAt.day.toString().padLeft(2, '0')}/${rating.createdAt.month.toString().padLeft(2, '0')}/${rating.createdAt.year}',
             style: TextStyle(
               color: colors.onSurface.withValues(alpha: 0.4),
               fontSize: 12,

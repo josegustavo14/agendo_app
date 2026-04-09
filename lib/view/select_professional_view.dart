@@ -4,6 +4,7 @@ import 'package:agendo/models/profession_model.dart';
 import 'package:agendo/models/professional_model.dart';
 import 'package:agendo/repositories/professional_repository.dart';
 import 'package:agendo/view/book_appointment_view.dart';
+import 'package:agendo/view/components/rating_bar_widget.dart';
 
 class SelectProfessionalView extends StatefulWidget {
   const SelectProfessionalView({super.key});
@@ -46,7 +47,9 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
         _isLoadingProfessions = false;
       });
       }
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('[SelectProfessional] Erro ao carregar profissões: $e');
+      debugPrint(st.toString());
       if (mounted) setState(() => _isLoadingProfessions = false);
     }
   }
@@ -63,11 +66,13 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
       );
       if (mounted) {
         setState(() {
-        _professionals = professionals;
-        _isLoadingProfessionals = false;
-      });
+          _professionals = professionals;
+          _isLoadingProfessionals = false;
+        });
       }
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('[SelectProfessional] Erro ao buscar profissionais: $e');
+      debugPrint(st.toString());
       if (mounted) setState(() => _isLoadingProfessionals = false);
     }
   }
@@ -204,15 +209,16 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
                             return GridView.builder(
                               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
                               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: constraints.maxWidth >= 1200 ? 3 : 2,
+                                crossAxisCount: constraints.maxWidth >= 1200 ? 4 : 3,
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
-                                childAspectRatio: 2.4,
+                                childAspectRatio: 0.78,
                               ),
                               itemCount: _professionals.length,
                               itemBuilder: (context, index) => _ProfessionalCard(
                                 professional: _professionals[index],
                                 onTap: () => _navigateToBook(index),
+                                isWide: true,
                               ),
                             );
                           }
@@ -237,12 +243,25 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
 class _ProfessionalCard extends StatelessWidget {
   final ProfessionalModel professional;
   final VoidCallback onTap;
+  final bool isWide;
 
-  const _ProfessionalCard({required this.professional, required this.onTap});
+  const _ProfessionalCard({
+    required this.professional,
+    required this.onTap,
+    this.isWide = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    return isWide ? _buildWideCard(context) : _buildMobileCard(context);
+  }
+
+  // ── Mobile: layout horizontal ──────────────────────────────────────────────
+  Widget _buildMobileCard(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final w = MediaQuery.of(context).size.width;
+    final scale = (w / 400).clamp(1.0, 1.15);
+    final avg = professional.ratingAverage;
 
     return GestureDetector(
       onTap: onTap,
@@ -254,43 +273,27 @@ class _ProfessionalCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Avatar
               CircleAvatar(
-                radius: 28,
+                radius: 28 * scale,
                 backgroundColor: colors.primary.withValues(alpha: 0.2),
                 child: Text(
                   professional.name.isNotEmpty ? professional.name[0].toUpperCase() : '?',
-                  style: TextStyle(
-                    color: colors.primary,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(color: colors.primary, fontSize: 22 * scale, fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(width: 14),
-
-              // Info
+              SizedBox(width: 14 * scale),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       professional.name,
-                      style: TextStyle(
-                        color: colors.surface,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(color: colors.surface, fontSize: 17 * scale, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       professional.professionName,
-                      style: TextStyle(
-                        color: colors.primary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
+                      style: TextStyle(color: colors.primary, fontSize: 13 * scale, fontWeight: FontWeight.w600, letterSpacing: 0.5),
                     ),
                     if (professional.bio != null && professional.bio!.isNotEmpty) ...[
                       const SizedBox(height: 4),
@@ -298,48 +301,125 @@ class _ProfessionalCard extends StatelessWidget {
                         professional.bio!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colors.surface.withValues(alpha: 0.6),
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(color: colors.surface.withValues(alpha: 0.6), fontSize: 13 * scale),
                       ),
                     ],
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        RatingBarWidget(rating: avg, size: 14 * scale),
+                        const SizedBox(width: 4),
+                        Text(
+                          avg > 0 ? avg.toStringAsFixed(1) : 'Sem avaliações',
+                          style: TextStyle(
+                            color: avg > 0 ? colors.surface : colors.surface.withValues(alpha: 0.4),
+                            fontSize: 12 * scale,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
+              Icon(Icons.chevron_right, color: colors.surface.withValues(alpha: 0.4)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-              // Rating + Price
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.star, size: 16, color: Colors.amber),
-                      const SizedBox(width: 2),
-                      Text(
-                        professional.ratingAverage.toStringAsFixed(1),
-                        style: TextStyle(
-                          color: colors.surface,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'R\$ ${professional.hourlyRate.toStringAsFixed(0)}/h',
-                    style: TextStyle(
-                      color: colors.surface.withValues(alpha: 0.7),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
+  // ── Desktop: layout vertical (card de perfil) ──────────────────────────────
+  Widget _buildWideCard(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final w = MediaQuery.of(context).size.width;
+    final scale = (w / 900).clamp(1.0, 1.3);
+    final avg = professional.ratingAverage;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        elevation: 0,
+        color: colors.onSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: EdgeInsets.all(20 * scale),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 36 * scale,
+                backgroundColor: colors.primary.withValues(alpha: 0.2),
+                child: Text(
+                  professional.name.isNotEmpty ? professional.name[0].toUpperCase() : '?',
+                  style: TextStyle(color: colors.primary, fontSize: 30 * scale, fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(height: 12 * scale),
+
+              Text(
+                professional.name,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: colors.surface, fontSize: 16 * scale, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4 * scale),
+
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 3 * scale),
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  professional.professionName,
+                  style: TextStyle(color: colors.primary, fontSize: 12 * scale, fontWeight: FontWeight.w600),
+                ),
               ),
 
-              const SizedBox(width: 4),
-              Icon(Icons.chevron_right, color: colors.surface.withValues(alpha: 0.4)),
+              if (professional.bio != null && professional.bio!.isNotEmpty) ...[
+                SizedBox(height: 10 * scale),
+                Text(
+                  professional.bio!,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: colors.surface.withValues(alpha: 0.55), fontSize: 12 * scale),
+                ),
+              ],
+
+              const Spacer(),
+
+              RatingBarWidget(rating: avg, size: 16 * scale),
+              SizedBox(height: 4 * scale),
+              Text(
+                avg > 0 ? avg.toStringAsFixed(1) : 'Sem avaliações',
+                style: TextStyle(
+                  color: avg > 0 ? colors.surface : colors.surface.withValues(alpha: 0.35),
+                  fontSize: 12 * scale,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
+              SizedBox(height: 12 * scale),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: onTap,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colors.primary,
+                    foregroundColor: colors.onPrimary,
+                    padding: EdgeInsets.symmetric(vertical: 10 * scale),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                    textStyle: TextStyle(fontSize: 14 * scale, fontWeight: FontWeight.bold),
+                  ),
+                  child: const Text('Agendar'),
+                ),
+              ),
             ],
           ),
         ),

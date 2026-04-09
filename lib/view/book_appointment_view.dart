@@ -4,6 +4,7 @@ import 'package:agendo/models/professional_model.dart';
 import 'package:agendo/models/service_type_model.dart';
 import 'package:agendo/repositories/professional_repository.dart';
 import 'package:agendo/repositories/appointment_repository.dart';
+import 'package:agendo/view/ratings_view.dart';
 import 'package:agendo/view_models/auth_view_model.dart';
 
 class BookAppointmentView extends StatefulWidget {
@@ -287,26 +288,34 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                     ),
                   ],
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.star, size: 16, color: Colors.amber),
-                      const SizedBox(width: 4),
-                      Text(
-                        pro.ratingAverage.toStringAsFixed(1),
-                        style: TextStyle(
-                          color: colors.surface,
-                          fontWeight: FontWeight.bold,
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => RatingsView(
+                          professionalId: pro.id,
+                          professionalName: pro.name,
+                          canSubmit: false,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Text(
-                        'R\$ ${pro.hourlyRate.toStringAsFixed(2).replaceAll('.', ',')}/h',
-                        style: TextStyle(
-                          color: colors.surface.withValues(alpha: 0.7),
-                          fontSize: 13,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.star, size: 16, color: Colors.amber),
+                        const SizedBox(width: 4),
+                        Text(
+                          pro.ratingAverage > 0
+                              ? pro.ratingAverage.toStringAsFixed(1)
+                              : 'Ver avaliações',
+                          style: TextStyle(
+                            color: pro.ratingAverage > 0 ? colors.surface : colors.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Icon(Icons.chevron_right, size: 14, color: colors.surface.withValues(alpha: 0.5)),
+                      ],
+                    ),
                   ),
                 ],
               ),

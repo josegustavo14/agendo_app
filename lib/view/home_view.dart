@@ -1,4 +1,5 @@
 import 'package:agendo/view/components/appointment_card_skeleton.dart';
+import 'package:agendo/view/ratings_view.dart';
 import 'package:agendo/view/select_professional_view.dart';
 import 'package:agendo/view_models/auth_view_model.dart';
 import 'package:flutter/material.dart';
@@ -181,6 +182,17 @@ class _HomeViewState extends State<HomeView> {
                 );
               }
             }
+          : null,
+      onRate: !isProfessional && a.isCompleted
+          ? () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => RatingsView(
+                    professionalId: a.professionalId,
+                    professionalName: a.professionalName,
+                    canSubmit: true,
+                  ),
+                ),
+              )
           : null,
     )).toList();
 

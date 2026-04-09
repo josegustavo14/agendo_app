@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:agendo/models/appointment_model.dart';
 import 'package:agendo/services/api_service.dart';
 
@@ -11,11 +12,11 @@ class AppointmentRepository {
     final response = await apiService.get('/appointments');
 
     if (response.statusCode == 200) {
-      print('Appointments fetched successfully: ${response.body}');
+      debugPrint('Appointments fetched successfully: ${response.body}');
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => AppointmentModel.fromJson(json)).toList();
     } else {
-      print('Error fetching appointments: ${response.statusCode} - ${response.body}');
+      debugPrint('Error fetching appointments: ${response.statusCode} - ${response.body}');
       throw Exception('Erro ao buscar agendamentos');
     }
   }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../models/rating_model.dart';
 import '../repositories/rating_repository.dart';
 
@@ -11,8 +11,14 @@ class RatingViewModel extends ChangeNotifier {
   final Map<int, List<RatingModel>> _cache = {};
   final Set<int> _loading = {};
 
+  List<RatingModel> _myRatings = [];
+  bool _isLoadingMyRatings = false;
+
   bool isSubmitting = false;
   String? submitError;
+
+  List<RatingModel> get myRatings => _myRatings;
+  bool get isLoadingMyRatings => _isLoadingMyRatings;
 
   List<RatingModel> ratingsFor(int professionalId) =>
       _cache[professionalId] ?? [];
@@ -34,10 +40,28 @@ class RatingViewModel extends ChangeNotifier {
     try {
       final ratings = await repository.fetchRatings(professionalId);
       _cache[professionalId] = ratings;
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('[RatingViewModel] Erro ao carregar avaliações: $e');
+      debugPrint(st.toString());
       _cache[professionalId] = [];
     } finally {
       _loading.remove(professionalId);
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadMyRatings() async {
+    _isLoadingMyRatings = true;
+    notifyListeners();
+
+    try {
+      _myRatings = await repository.fetchMyRatings();
+    } catch (e, st) {
+      debugPrint('[RatingViewModel] Erro ao carregar minhas avaliações: $e');
+      debugPrint(st.toString());
+      _myRatings = [];
+    } finally {
+      _isLoadingMyRatings = false;
       notifyListeners();
     }
   }
@@ -60,7 +84,9 @@ class RatingViewModel extends ChangeNotifier {
       _cache.remove(professionalId); // invalidate cache
       await loadRatings(professionalId);
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('[RatingViewModel] Erro ao enviar avaliação: $e');
+      debugPrint(st.toString());
       submitError = 'Erro ao enviar avaliação';
       return false;
     } finally {
