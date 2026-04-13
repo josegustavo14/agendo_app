@@ -11,13 +11,13 @@ class HomeViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  Future<void> loadAppointments() async {
+  Future<void> loadAppointments({bool isProfessional = false}) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
-      appointments = await repository.fetchAppointments(role: 'client');
+      appointments = await repository.fetchActive();
     } catch (e) {
       errorMessage = 'Erro ao carregar agendamentos';
       debugPrint('Error fetching appointments: $e');

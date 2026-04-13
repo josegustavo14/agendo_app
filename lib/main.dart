@@ -1,3 +1,5 @@
+import 'package:agendo/services/token_storage.dart';
+import 'package:agendo/view/bottom_navigation_bar_page.dart';
 import 'package:agendo/view/components/color_app.dart';
 import 'package:agendo/view/login_view.dart';
 import 'package:flutter/material.dart';
@@ -15,14 +17,20 @@ import 'view_models/profile_view_model.dart';
 import 'view_models/appointments_view_model.dart';
 import 'view_models/rating_view_model.dart';
 
+final navigatorKey = GlobalKey<NavigatorState>();
+
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   final apiService = ApiService();
+  final tokenStorage = TokenStorage();
 
   runApp(
     MultiProvider(
       providers: [
         Provider(create: (_) => apiService),
-        Provider(create: (_) => AuthRepository(apiService: apiService)),
+        Provider(create: (_) => tokenStorage),
+        Provider(create: (_) => AuthRepository(apiService: apiService, tokenStorage: tokenStorage)),
         Provider(create: (_) => AppointmentRepository(apiService: apiService)),
         Provider(create: (_) => UserRepository(apiService: apiService)),
         Provider(create: (_) => ServiceTypeRepository(apiService: apiService)),
@@ -31,6 +39,7 @@ void main() {
         ChangeNotifierProvider(
           create: (context) => AuthViewModel(
             repository: context.read<AuthRepository>(),
+            userRepository: context.read<UserRepository>(),
           ),
         ),
         ChangeNotifierProvider(
@@ -65,12 +74,52 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Agendo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorScheme: ColorApp.lightScheme),
       darkTheme: ThemeData(useMaterial3: true, colorScheme: ColorApp.darkScheme),
       themeMode: ThemeMode.dark,
-      home: const LoginView(),
+      home: const _SplashGate(),
+    );
+  }
+}
+
+/// Checks for a saved session and routes to home or login.
+class _SplashGate extends StatefulWidget {
+  const _SplashGate();
+
+  @override
+  State<_SplashGate> createState() => _SplashGateState();
+}
+
+class _SplashGateState extends State<_SplashGate> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkSession());
+  }
+
+  Future<void> _checkSession() async {
+    final auth = context.read<AuthViewModel>();
+    final restored = await auth.tryAutoLogin();
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => restored ? const BottomNavigationBarPage() : const LoginView(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Scaffold(
+      backgroundColor: colors.surface,
+      body: Center(
+        child: CircularProgressIndicator(color: colors.primary),
+      ),
     );
   }
 }

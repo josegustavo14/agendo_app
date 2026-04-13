@@ -175,7 +175,7 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 24, vertical: 8),
                             itemCount: _professionals.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const SizedBox(height: 12),
                             itemBuilder: (_, i) => _ProfessionalCard(
                               professional: _professionals[i],
@@ -213,6 +213,10 @@ class _ProfessionalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return _buildMobileCard(context);
+  }
+
+  Widget _buildMobileCard(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final ratingVm = context.watch<RatingViewModel>();
     final average = ratingVm.averageFor(professional.id);

@@ -4,8 +4,8 @@ class ProfessionalModel {
   final String? phone;
   final String professionName;
   final String? bio;
-  final double? hourlyRate;
-  final double? ratingAverage;
+  final double hourlyRate;
+  final double ratingAverage;
   final bool isAvailable;
 
   ProfessionalModel({
@@ -14,8 +14,8 @@ class ProfessionalModel {
     this.phone,
     required this.professionName,
     this.bio,
-    this.hourlyRate,
-    this.ratingAverage,
+    required this.hourlyRate,
+    required this.ratingAverage,
     required this.isAvailable,
   });
 
@@ -26,8 +26,8 @@ class ProfessionalModel {
       phone: json['phone'] as String?,
       professionName: json['professionName'] as String,
       bio: json['bio'] as String?,
-      hourlyRate: (json['hourlyRate'] as num?)?.toDouble(),
-      ratingAverage: (json['ratingAverage'] as num?)?.toDouble(),
+      hourlyRate: (json['hourlyRate'] as num?)?.toDouble() ?? 0.0,
+      ratingAverage: (json['ratingAverage'] as num?)?.toDouble() ?? 0.0,
       isAvailable: json['isAvailable'] as bool,
     );
   }

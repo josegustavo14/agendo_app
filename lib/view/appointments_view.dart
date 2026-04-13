@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/appointment_model.dart';
 import '../view_models/appointments_view_model.dart';
-import '../view_models/auth_view_model.dart';
-import '../view_models/rating_view_model.dart';
 import 'components/appointment_card.dart';
 import 'components/appointment_status_badge.dart';
 import 'ratings_view.dart';
@@ -221,6 +219,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                 onTap: () async {
                   Navigator.pop(context);
                   final ok = await vm.approve(a.id);
+                  if (!context.mounted) return;
                   _feedback(context, ok, 'Agendamento aprovado!');
                 },
               ),
@@ -233,6 +232,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                 onTap: () async {
                   Navigator.pop(context);
                   final ok = await vm.reject(a.id);
+                  if (!context.mounted) return;
                   _feedback(context, ok, 'Agendamento rejeitado');
                 },
               ),
@@ -246,6 +246,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                 onTap: () async {
                   Navigator.pop(context);
                   final ok = await vm.complete(a.id);
+                  if (!context.mounted) return;
                   _feedback(context, ok, 'Atendimento concluído!');
                 },
               ),
@@ -258,6 +259,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                 onTap: () async {
                   Navigator.pop(context);
                   final ok = await vm.cancel(a.id);
+                  if (!context.mounted) return;
                   _feedback(context, ok, 'Agendamento cancelado');
                 },
               ),
@@ -311,6 +313,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                 onTap: () async {
                   Navigator.pop(context);
                   final ok = await vm.cancel(a.id);
+                  if (!context.mounted) return;
                   _feedback(context, ok, 'Agendamento cancelado');
                 },
               ),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:agendo/models/profession_model.dart';
 import 'package:agendo/models/professional_model.dart';
 import 'package:agendo/models/service_type_model.dart';
@@ -32,23 +33,20 @@ class ProfessionalRepository {
       queryParams['serviceTypeName'] = serviceTypeName;
     }
 
-    try {
-      final response = await apiService.get(
-        '/professionals',
-        queryParams: queryParams.isNotEmpty ? queryParams : null,
-      );
-      if (response.statusCode == 200) {
+    final response = await apiService.get(
+      '/professionals',
+      queryParams: queryParams.isNotEmpty ? queryParams : null,
+    );
+
+    debugPrint('[ProfessionalRepository] GET /professionals status: ${response.statusCode}');
+    debugPrint('[ProfessionalRepository] body: ${response.body}');
+
+    if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => ProfessionalModel.fromJson(json)).toList();
     } else {
-      print('Error searching professionals: ${response.statusCode} - ${response.body}');
-      throw Exception('Erro ao buscar profissionais');
+      throw Exception('Erro ao buscar profissionais: ${response.statusCode} ${response.body}');
     }
-    } catch (e) {
-      print('Error searching professionals: $e');
-      throw Exception('Erro ao buscar profissionais');
-    }
-
   }
 
   Future<ProfessionalModel> getProfessional(int id) async {

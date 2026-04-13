@@ -1,12 +1,11 @@
 import 'package:agendo/view/components/appointment_card_skeleton.dart';
+import 'package:agendo/view/ratings_view.dart';
 import 'package:agendo/view/select_profession_view.dart';
 import 'package:agendo/view_models/auth_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/home_view_model.dart';
 import 'components/appointment_card.dart';
-import 'appointments_view.dart';
-import 'ratings_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -22,7 +21,8 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HomeViewModel>().loadAppointments();
+      final isProfessional = context.read<AuthViewModel>().user?.professionalProfile != null;
+      context.read<HomeViewModel>().loadAppointments(isProfessional: isProfessional);
     });
   }
 
@@ -38,11 +38,13 @@ class _HomeViewState extends State<HomeView> {
         padding: const EdgeInsets.all(24.0),
         child: ElevatedButton(
           onPressed: () async {
+            final isProfessional = context.read<AuthViewModel>().user?.professionalProfile != null;
+            final homeVm = context.read<HomeViewModel>();
             final created = await Navigator.of(context).push<bool>(
               MaterialPageRoute(builder: (_) => const SelectProfessionView()),
             );
             if (created == true && mounted) {
-              context.read<HomeViewModel>().loadAppointments();
+              homeVm.loadAppointments(isProfessional: isProfessional);
             }
           },
           style: ElevatedButton.styleFrom(

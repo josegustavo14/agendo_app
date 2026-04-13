@@ -23,7 +23,11 @@ class AppointmentsViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      appointments = await repository.fetchAppointments(role: role);
+      if (role == 'professional') {
+        appointments = await repository.fetchProfessionalAppointments();
+      } else {
+        appointments = await repository.fetchActive();
+      }
     } catch (_) {
       errorMessage = 'Erro ao carregar agendamentos';
     } finally {
