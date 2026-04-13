@@ -1,4 +1,5 @@
 import 'package:agendo/view/components/appointment_card_skeleton.dart';
+import 'package:agendo/view/ratings_view.dart';
 import 'package:agendo/view/select_professional_view.dart';
 import 'package:agendo/view_models/auth_view_model.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,8 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HomeViewModel>().loadAppointments();
+      final isProfessional = context.read<AuthViewModel>().user?.professionalProfile != null;
+      context.read<HomeViewModel>().loadAppointments(isProfessional: isProfessional);
     });
   }
 
@@ -37,11 +39,13 @@ class _HomeViewState extends State<HomeView> {
         padding: const EdgeInsets.all(24.0),
         child: ElevatedButton(
           onPressed: () async {
+            final isProfessional = context.read<AuthViewModel>().user?.professionalProfile != null;
+            final homeVm = context.read<HomeViewModel>();
             final created = await Navigator.of(context).push<bool>(
               MaterialPageRoute(builder: (_) => const SelectProfessionalView()),
             );
             if (created == true && mounted) {
-              context.read<HomeViewModel>().loadAppointments();
+              homeVm.loadAppointments(isProfessional: isProfessional);
             }
           },
           style: ElevatedButton.styleFrom(
@@ -154,7 +158,43 @@ class _HomeViewState extends State<HomeView> {
       );
     }
 
-    final cards = viewModel.appointments.map((a) => AppointmentCard(appointment: a)).toList();
+    final isProfessional = context.read<AuthViewModel>().user?.professionalProfile != null;
+
+    final cards = viewModel.appointments.map((a) => AppointmentCard(
+      appointment: a,
+      showClient: isProfessional,
+      onApprove: isProfessional && a.isPending
+          ? () async {
+              final ok = await viewModel.approveAppointment(a.id);
+              if (!ok && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Erro ao aprovar agendamento')),
+                );
+              }
+            }
+          : null,
+      onReject: isProfessional && a.isPending
+          ? () async {
+              final ok = await viewModel.rejectAppointment(a.id);
+              if (!ok && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Erro ao recusar agendamento')),
+                );
+              }
+            }
+          : null,
+      onRate: !isProfessional && a.isCompleted
+          ? () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => RatingsView(
+                    professionalId: a.professionalId,
+                    professionalName: a.professionalName,
+                    canSubmit: true,
+                  ),
+                ),
+              )
+          : null,
+    )).toList();
 
     if (isWide) {
       return SingleChildScrollView(

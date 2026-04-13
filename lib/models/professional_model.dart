@@ -26,8 +26,8 @@ class ProfessionalModel {
       phone: json['phone'] as String?,
       professionName: json['professionName'] as String,
       bio: json['bio'] as String?,
-      hourlyRate: (json['hourlyRate'] as num).toDouble(),
-      ratingAverage: (json['ratingAverage'] as num).toDouble(),
+      hourlyRate: (json['hourlyRate'] as num?)?.toDouble() ?? 0.0,
+      ratingAverage: (json['rating'] as num?)?.toDouble() ?? 0.0,
       isAvailable: json['isAvailable'] as bool,
     );
   }
