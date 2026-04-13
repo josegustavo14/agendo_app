@@ -4,8 +4,11 @@ import 'package:agendo/models/professional_model.dart';
 import 'package:agendo/models/service_type_model.dart';
 import 'package:agendo/repositories/professional_repository.dart';
 import 'package:agendo/repositories/appointment_repository.dart';
+import 'package:agendo/models/rating_model.dart';
 import 'package:agendo/view/ratings_view.dart';
 import 'package:agendo/view_models/auth_view_model.dart';
+import 'package:agendo/view_models/rating_view_model.dart';
+import 'components/rating_bar_widget.dart';
 
 class BookAppointmentView extends StatefulWidget {
   final ProfessionalModel professional;
@@ -28,7 +31,10 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadServices());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadServices();
+      context.read<RatingViewModel>().loadRatings(widget.professional.id);
+    });
   }
 
   Future<void> _loadServices() async {
@@ -188,7 +194,11 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                           ],
                         ),
                         const SizedBox(height: 28),
-                        if (_canSubmit) _buildSummary(colors, pro),
+                        if (_canSubmit) ...[
+                          _buildSummary(colors, pro),
+                          const SizedBox(height: 28),
+                        ],
+                        _buildRatingsSection(colors),
                         const SizedBox(height: 16),
                         confirmButton,
                       ],
@@ -224,7 +234,11 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
             const SizedBox(height: 12),
             Row(children: [Expanded(child: _buildDateButton(colors)), const SizedBox(width: 12), Expanded(child: _buildTimeButton(colors))]),
             const SizedBox(height: 28),
-            if (_canSubmit) _buildSummary(colors, pro),
+            if (_canSubmit) ...[
+              _buildSummary(colors, pro),
+              const SizedBox(height: 28),
+            ],
+            _buildRatingsSection(colors),
             const SizedBox(height: 24),
           ],
         ),
@@ -491,6 +505,90 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildRatingsSection(ColorScheme colors) {
+    final ratingVm = context.watch<RatingViewModel>();
+    final ratings = ratingVm.ratingsFor(widget.professional.id);
+    final isLoading = ratingVm.isLoadingFor(widget.professional.id);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Avaliações',
+          style: TextStyle(
+            color: colors.onSurface,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (isLoading)
+          Center(child: CircularProgressIndicator(color: colors.primary, strokeWidth: 2))
+        else if (ratings.isEmpty)
+          Text(
+            'Nenhuma avaliação ainda',
+            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.4)),
+          )
+        else
+          ...ratings.map((r) => _buildRatingCard(colors, r)),
+      ],
+    );
+  }
+
+  Widget _buildRatingCard(ColorScheme colors, RatingModel r) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.onSurface.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 14,
+                backgroundColor: colors.primary.withValues(alpha: 0.15),
+                child: Text(
+                  r.clientName.isNotEmpty ? r.clientName[0].toUpperCase() : '?',
+                  style: TextStyle(
+                    color: colors.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  r.clientName,
+                  style: TextStyle(
+                    color: colors.onSurface,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              RatingBarWidget(rating: r.score.toDouble(), size: 13),
+            ],
+          ),
+          if (r.comment != null && r.comment!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              r.comment!,
+              style: TextStyle(
+                color: colors.onSurface.withValues(alpha: 0.75),
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
