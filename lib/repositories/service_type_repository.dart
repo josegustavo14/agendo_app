@@ -20,11 +20,13 @@ class ServiceTypeRepository {
 
   Future<ServiceTypeModel> createServiceType({
     required String name,
+    required double price,
     String? description,
   }) async {
     final response = await apiService.post('/service-types', body: {
       'name': name,
-      'description': ?description,
+      'price': price,
+      if (description != null) 'description': description,
     });
 
     if (response.statusCode == 201) {

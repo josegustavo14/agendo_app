@@ -192,7 +192,11 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                           _buildSummary(colors, pro),
                           const SizedBox(height: 28),
                         ],
-                        _buildRatingsSection(colors),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: _buildRatingsSection(colors),
+                          ),
+                        ),
                         const SizedBox(height: 16),
                         confirmButton,
                       ],
@@ -461,13 +465,16 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
               color: hasDate ? colors.primary : colors.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(width: 10),
-            Text(
-              hasDate
-                  ? '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}'
-                  : 'Selecionar data',
-              style: TextStyle(
-                color: hasDate ? colors.onSurface : colors.onSurface.withValues(alpha: 0.5),
-                fontWeight: hasDate ? FontWeight.w600 : FontWeight.normal,
+            Flexible(
+              child: Text(
+                hasDate
+                    ? '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}'
+                    : 'Selecionar data',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: hasDate ? colors.onSurface : colors.onSurface.withValues(alpha: 0.5),
+                  fontWeight: hasDate ? FontWeight.w600 : FontWeight.normal,
+                ),
               ),
             ),
           ],
@@ -500,13 +507,16 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
               color: hasTime ? colors.primary : colors.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(width: 10),
-            Text(
-              hasTime
-                  ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
-                  : 'Selecionar horário',
-              style: TextStyle(
-                color: hasTime ? colors.onSurface : colors.onSurface.withValues(alpha: 0.5),
-                fontWeight: hasTime ? FontWeight.w600 : FontWeight.normal,
+            Flexible(
+              child: Text(
+                hasTime
+                    ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
+                    : 'Selecionar horário',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: hasTime ? colors.onSurface : colors.onSurface.withValues(alpha: 0.5),
+                  fontWeight: hasTime ? FontWeight.w600 : FontWeight.normal,
+                ),
               ),
             ),
           ],
@@ -600,7 +610,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
   }
 
   Widget _buildSummary(ColorScheme colors, ProfessionalModel pro) {
-    final valueInCents = (pro.hourlyRate * 100).round();
+    final valueInCents = ((_selectedService!.price ?? 0.0) * 100).round();
     final formattedValue = 'R\$ ${(valueInCents / 100).toStringAsFixed(2).replaceAll('.', ',')}';
     final dateStr =
         '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}';

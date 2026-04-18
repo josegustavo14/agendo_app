@@ -1,3 +1,4 @@
+import 'package:agendo/view/appointment_history_view.dart';
 import 'package:agendo/view/appointments_view.dart';
 import 'package:agendo/view/home_view.dart';
 import 'package:agendo/view/notifications_view.dart';
@@ -12,6 +13,7 @@ import 'package:provider/provider.dart';
 const _clientPages = <Widget>[
   HomeView(),
   SelectProfessionView(),
+  AppointmentHistoryView(),
   ProfileView(),
   NotificationsView(),
 ];
@@ -19,6 +21,7 @@ const _clientPages = <Widget>[
 const _clientDestinations = <NavigationDestination>[
   NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
   NavigationDestination(icon: Icon(Icons.search_outlined), selectedIcon: Icon(Icons.search), label: 'Buscar'),
+  NavigationDestination(icon: Icon(Icons.history_outlined), selectedIcon: Icon(Icons.history), label: 'Histórico'),
   NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Perfil'),
   NavigationDestination(icon: Icon(Icons.notifications_outlined), selectedIcon: Icon(Icons.notifications), label: 'Notificações'),
 ];
@@ -26,6 +29,7 @@ const _clientDestinations = <NavigationDestination>[
 const _clientRailDestinations = <NavigationRailDestination>[
   NavigationRailDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: Text('Home')),
   NavigationRailDestination(icon: Icon(Icons.search_outlined), selectedIcon: Icon(Icons.search), label: Text('Buscar')),
+  NavigationRailDestination(icon: Icon(Icons.history_outlined), selectedIcon: Icon(Icons.history), label: Text('Histórico')),
   NavigationRailDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: Text('Perfil')),
   NavigationRailDestination(icon: Icon(Icons.notifications_outlined), selectedIcon: Icon(Icons.notifications), label: Text('Notificações')),
 ];

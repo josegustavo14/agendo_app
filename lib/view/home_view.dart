@@ -1,5 +1,4 @@
 import 'package:agendo/view/components/appointment_card_skeleton.dart';
-import 'package:agendo/view/ratings_view.dart';
 import 'package:agendo/view/select_profession_view.dart';
 import 'package:agendo/view_models/auth_view_model.dart';
 import 'package:flutter/material.dart';
@@ -68,7 +67,7 @@ class _HomeViewState extends State<HomeView> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1400),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SizedBox(
                       width: 300,
@@ -83,13 +82,15 @@ class _HomeViewState extends State<HomeView> {
             );
           }
 
-          return SingleChildScrollView(
+          return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader(context, colors, clientName),
-                _buildContent(viewModel, colors, context),
+                Expanded(
+                  child: _buildContent(viewModel, colors, context),
+                ),
               ],
             ),
           );
@@ -139,9 +140,15 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _buildContent(HomeViewModel viewModel, ColorScheme colors,
       BuildContext context, {bool isWide = false}) {
+    final edgePadding = EdgeInsets.only(
+      top: isWide ? 32 : 16,
+      right: isWide ? 32 : 0,
+      bottom: 24,
+    );
+
     if (viewModel.isLoading) {
-      return Padding(
-        padding: EdgeInsets.only(top: isWide ? 32 : 16, right: isWide ? 32 : 0),
+      return SingleChildScrollView(
+        padding: edgePadding,
         child: const Column(children: [
           AppointmentCardSkeleton(),
           AppointmentCardSkeleton(),
@@ -151,28 +158,24 @@ class _HomeViewState extends State<HomeView> {
     }
 
     if (viewModel.appointments.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 40),
-        child: Center(
-          child: Text(
-            'Nenhum agendamento encontrado',
-            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.4)),
-          ),
+      return Center(
+        child: Text(
+          'Nenhum agendamento ativo',
+          style: TextStyle(color: colors.onSurface.withValues(alpha: 0.4)),
         ),
       );
     }
 
-    final cards = viewModel.appointments
-        .map((a) => AppointmentCard(
-              appointment: a,
-              onTap: () => _showActions(context, a, viewModel),
-            ))
-        .toList();
-
-    return Padding(
-      padding: EdgeInsets.only(
-          top: isWide ? 32 : 16, right: isWide ? 32 : 0, bottom: 24),
-      child: Column(children: cards),
+    return ListView.builder(
+      padding: edgePadding,
+      itemCount: viewModel.appointments.length,
+      itemBuilder: (_, i) {
+        final a = viewModel.appointments[i];
+        return AppointmentCard(
+          appointment: a,
+          onTap: () => _showActions(context, a, viewModel),
+        );
+      },
     );
   }
 
@@ -227,36 +230,8 @@ class _HomeViewState extends State<HomeView> {
                         borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
-              ),
-            if (a.isCompleted)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(sheetCtx);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => RatingsView(
-                          professionalId: a.professionalId,
-                          professionalName: a.professionalName,
-                          canSubmit: true,
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.star_outline, color: Colors.amber),
-                  label: const Text('Avaliar profissional',
-                      style: TextStyle(color: Colors.amber)),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.amber),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-            if (!a.isApproved && !a.isCompleted)
+              )
+            else
               Center(
                 child: Text(
                   'Nenhuma ação disponível',

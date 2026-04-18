@@ -13,6 +13,7 @@ import 'repositories/professional_repository.dart';
 import 'repositories/rating_repository.dart';
 import 'view_models/auth_view_model.dart';
 import 'view_models/home_view_model.dart';
+import 'view_models/history_view_model.dart';
 import 'view_models/profile_view_model.dart';
 import 'view_models/appointments_view_model.dart';
 import 'view_models/rating_view_model.dart';
@@ -44,6 +45,11 @@ void main() {
         ),
         ChangeNotifierProvider(
           create: (context) => HomeViewModel(
+            repository: context.read<AppointmentRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => HistoryViewModel(
             repository: context.read<AppointmentRepository>(),
           ),
         ),

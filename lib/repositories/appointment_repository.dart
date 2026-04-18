@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:agendo/models/appointment_model.dart';
+import 'package:agendo/models/timeline_entry_model.dart';
 import 'package:agendo/services/api_service.dart';
 
 class AppointmentRepository {
@@ -9,7 +10,7 @@ class AppointmentRepository {
   AppointmentRepository({required this.apiService});
 
   Future<List<AppointmentModel>> fetchActive() async {
-    final response = await apiService.get('/appointments');
+    final response = await apiService.get('/appointments/active');
 
     if (response.statusCode == 200) {
       debugPrint('Appointments fetched successfully: ${response.body}');
@@ -42,12 +43,12 @@ class AppointmentRepository {
     }
   }
 
-  Future<List<AppointmentModel>> getTimeline() async {
-    final response = await apiService.get('/appointments/timeline');
+  Future<List<TimelineEntryModel>> getTimeline(int id) async {
+    final response = await apiService.get('/appointments/$id/timeline');
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => AppointmentModel.fromJson(json)).toList();
+      return data.map((json) => TimelineEntryModel.fromJson(json)).toList();
     } else {
       throw Exception('Erro ao buscar timeline de agendamentos');
     }
