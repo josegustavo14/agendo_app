@@ -1,5 +1,6 @@
 import 'package:agendo/view/appointment_history_view.dart';
 import 'package:agendo/view/appointments_view.dart';
+import 'package:agendo/view/availability_view.dart';
 import 'package:agendo/view/home_view.dart';
 import 'package:agendo/view/notifications_view.dart';
 import 'package:agendo/view/profile_view.dart';
@@ -38,6 +39,7 @@ const _clientRailDestinations = <NavigationRailDestination>[
 final _professionalPages = <Widget>[
   const ProfessionalHomeView(),
   const AppointmentsView(role: 'professional'),
+  const AvailabilityView(),
   const ProfileView(),
   const NotificationsView(),
 ];
@@ -45,6 +47,7 @@ final _professionalPages = <Widget>[
 const _professionalDestinations = <NavigationDestination>[
   NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
   NavigationDestination(icon: Icon(Icons.calendar_today_outlined), selectedIcon: Icon(Icons.calendar_today), label: 'Agenda'),
+  NavigationDestination(icon: Icon(Icons.schedule_outlined), selectedIcon: Icon(Icons.schedule), label: 'Horários'),
   NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Perfil'),
   NavigationDestination(icon: Icon(Icons.notifications_outlined), selectedIcon: Icon(Icons.notifications), label: 'Notificações'),
 ];
@@ -52,6 +55,7 @@ const _professionalDestinations = <NavigationDestination>[
 const _professionalRailDestinations = <NavigationRailDestination>[
   NavigationRailDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: Text('Home')),
   NavigationRailDestination(icon: Icon(Icons.calendar_today_outlined), selectedIcon: Icon(Icons.calendar_today), label: Text('Agenda')),
+  NavigationRailDestination(icon: Icon(Icons.schedule_outlined), selectedIcon: Icon(Icons.schedule), label: Text('Horários')),
   NavigationRailDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: Text('Perfil')),
   NavigationRailDestination(icon: Icon(Icons.notifications_outlined), selectedIcon: Icon(Icons.notifications), label: Text('Notificações')),
 ];

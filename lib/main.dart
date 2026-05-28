@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'services/api_service.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/appointment_repository.dart';
+import 'repositories/availability_repository.dart';
 import 'repositories/user_repository.dart';
 import 'repositories/service_type_repository.dart';
 import 'repositories/professional_repository.dart';
@@ -37,6 +38,7 @@ void main() {
         Provider(create: (_) => ServiceTypeRepository(apiService: apiService)),
         Provider(create: (_) => ProfessionalRepository(apiService: apiService)),
         Provider(create: (_) => RatingRepository(apiService: apiService)),
+        Provider(create: (_) => AvailabilityRepository(apiService: apiService)),
         ChangeNotifierProvider(
           create: (context) => AuthViewModel(
             repository: context.read<AuthRepository>(),
