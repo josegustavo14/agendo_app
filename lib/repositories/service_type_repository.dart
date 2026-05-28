@@ -26,7 +26,7 @@ class ServiceTypeRepository {
     final response = await apiService.post('/service-types', body: {
       'name': name,
       'price': price,
-      if (description != null) 'description': description,
+      'description': description,
     });
 
     if (response.statusCode == 201) {

@@ -54,4 +54,10 @@ class ApiService {
     return response;
   }
 
+  Future<http.Response> delete(String path) async {
+    final uri = Uri.parse('$baseUrl$path');
+    final response = await http.delete(uri, headers: _headers);
+    _checkUnauthorized(response);
+    return response;
+  }
 }
