@@ -152,7 +152,9 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
                                     constraints.maxWidth >= 1200 ? 3 : 2,
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
-                                childAspectRatio: 2.2,
+                                // Cards mais cheios em wide pra dar respiro
+                                // ao conteúdo e evitar fonte minúscula relativa.
+                                childAspectRatio: 3.3,
                               ),
                               itemCount: _professionals.length,
                               itemBuilder: (_, i) => _ProfessionalCard(
@@ -221,6 +223,10 @@ class _ProfessionalCard extends StatelessWidget {
     final ratingVm = context.watch<RatingViewModel>();
     final average = ratingVm.averageFor(professional.id);
     final isLoadingRating = ratingVm.isLoadingFor(professional.id);
+    // Em wide o card ocupa colunas grandes da grid; sem escala as fontes
+    // mobile (16/12/11) viram letrinha minúscula relativa ao card.
+    final isWide = MediaQuery.of(context).size.width >= 800;
+    final scale = isWide ? 1.35 : 1.0;
 
     return GestureDetector(
       onTap: onTap,
@@ -230,11 +236,11 @@ class _ProfessionalCard extends StatelessWidget {
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(isWide ? 20 : 16),
           child: Row(
             children: [
               CircleAvatar(
-                radius: 28,
+                radius: isWide ? 36 : 28,
                 backgroundColor: colors.primary.withValues(alpha: 0.2),
                 child: Text(
                   professional.name.isNotEmpty
@@ -242,12 +248,12 @@ class _ProfessionalCard extends StatelessWidget {
                       : '?',
                   style: TextStyle(
                     color: colors.primary,
-                    fontSize: 22,
+                    fontSize: 22 * scale,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: isWide ? 18 : 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,42 +262,42 @@ class _ProfessionalCard extends StatelessWidget {
                       professional.name,
                       style: TextStyle(
                         color: colors.surface,
-                        fontSize: 16,
+                        fontSize: 16 * scale,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     if (professional.bio != null &&
                         professional.bio!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
                         professional.bio!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: colors.surface.withValues(alpha: 0.6),
-                          fontSize: 12,
+                          fontSize: 12 * scale,
                         ),
                       ),
                     ],
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     GestureDetector(
                       onTap: onRatingsTap,
                       child: Row(
                         children: [
                           if (isLoadingRating)
                             SizedBox(
-                              width: 14,
-                              height: 14,
+                              width: 14 * scale,
+                              height: 14 * scale,
                               child: CircularProgressIndicator(
                                 strokeWidth: 1.5,
                                 color: Colors.amber,
                               ),
                             )
                           else if (average != null)
-                            RatingBarWidget(rating: average, size: 14)
+                            RatingBarWidget(rating: average, size: 14 * scale)
                           else
                             Icon(Icons.star_border,
-                                size: 14, color: Colors.amber),
+                                size: 14 * scale, color: Colors.amber),
                           const SizedBox(width: 4),
                           Text(
                             average != null
@@ -299,15 +305,15 @@ class _ProfessionalCard extends StatelessWidget {
                                 : 'Sem avaliações',
                             style: TextStyle(
                               color: colors.surface.withValues(alpha: 0.7),
-                              fontSize: 12,
+                              fontSize: 12 * scale,
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 6),
                           Text(
                             '· ver avaliações',
                             style: TextStyle(
                               color: colors.primary,
-                              fontSize: 11,
+                              fontSize: 11 * scale,
                               decoration: TextDecoration.underline,
                               decorationColor: colors.primary,
                             ),
@@ -319,6 +325,7 @@ class _ProfessionalCard extends StatelessWidget {
                 ),
               ),
               Icon(Icons.chevron_right,
+                  size: 24 * (isWide ? 1.2 : 1.0),
                   color: colors.surface.withValues(alpha: 0.4)),
             ],
           ),
