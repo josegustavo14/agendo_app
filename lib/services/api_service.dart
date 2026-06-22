@@ -2,7 +2,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080';
+  /// Use --dart-define=API_BASE_URL=... no build para sobrescrever em dev/prod.
+  /// Default = produção (oortcloud.com.br).
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://oortcloud.com.br/api',
+  );
 
   String? _token;
 
