@@ -11,6 +11,7 @@ import 'repositories/professional_repository.dart';
 import 'view_models/auth_view_model.dart';
 import 'view_models/home_view_model.dart';
 import 'view_models/profile_view_model.dart';
+import 'view_models/manage_professional_profile_view_model.dart';
 
 void main() {
   final apiService = ApiService();
@@ -37,6 +38,13 @@ void main() {
         ChangeNotifierProvider(
           create: (context) => ProfileViewModel(
             repository: context.read<UserRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ManageProfessionalProfileViewModel(
+            professionalRepository: context.read<ProfessionalRepository>(),
+            userRepository: context.read<UserRepository>(),
+            serviceTypeRepository: context.read<ServiceTypeRepository>(),
           ),
         ),
       ],
