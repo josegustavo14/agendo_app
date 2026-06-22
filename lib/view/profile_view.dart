@@ -21,8 +21,9 @@ class _ProfileViewState extends State<ProfileView> {
     });
   }
 
-  void _handleLogout() {
-    context.read<AuthViewModel>().logout();
+  Future<void> _handleLogout() async {
+    await context.read<AuthViewModel>().logout();
+    if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginView()),
       (_) => false,

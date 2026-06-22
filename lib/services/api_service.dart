@@ -1,15 +1,14 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  /// Use --dart-define=API_BASE_URL=... no build para sobrescrever em dev/prod.
-  /// Default = produção (oortcloud.com.br).
-  static const String baseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'https://oortcloud.com.br/api',
-  );
+  static const String baseUrl = 'http://localhost:9090';
 
   String? _token;
+
+  /// Called when any authenticated request returns 401 (token expirado/inválido).
+  VoidCallback? onUnauthorized;
 
   String? get token => _token;
 
@@ -26,13 +25,39 @@ class ApiService {
         if (_token != null) 'Authorization': 'Bearer $_token',
       };
 
-  Future<http.Response> get(String path, {Map<String, String>? queryParams}) {
-    final uri = Uri.parse('$baseUrl$path').replace(queryParameters: queryParams);
-    return http.get(uri, headers: _headers);
+  void _checkUnauthorized(http.Response response) {
+    if (response.statusCode == 401 && _token != null) {
+      debugPrint('[ApiService] 401 recebido — token inválido ou expirado');
+      clearToken();
+      onUnauthorized?.call();
+    }
   }
 
-  Future<http.Response> post(String path, {Map<String, dynamic>? body}) {
+  Future<http.Response> get(String path, {Map<String, String>? queryParams}) async {
+    final uri = Uri.parse('$baseUrl$path').replace(queryParameters: queryParams);
+    final response = await http.get(uri, headers: _headers);
+    _checkUnauthorized(response);
+    return response;
+  }
+
+  Future<http.Response> post(String path, {Map<String, dynamic>? body}) async {
     final uri = Uri.parse('$baseUrl$path');
-    return http.post(uri, headers: _headers, body: jsonEncode(body));
+    final response = await http.post(uri, headers: _headers, body: jsonEncode(body));
+    _checkUnauthorized(response);
+    return response;
+  }
+
+  Future<http.Response> patch(String path, {Map<String, dynamic>? body}) async {
+    final uri = Uri.parse('$baseUrl$path');
+    final response = await http.patch(uri, headers: _headers, body: jsonEncode(body ?? {}));
+    _checkUnauthorized(response);
+    return response;
+  }
+
+  Future<http.Response> delete(String path) async {
+    final uri = Uri.parse('$baseUrl$path');
+    final response = await http.delete(uri, headers: _headers);
+    _checkUnauthorized(response);
+    return response;
   }
 }

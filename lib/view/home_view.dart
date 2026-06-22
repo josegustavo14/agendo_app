@@ -209,31 +209,7 @@ class _HomeViewState extends State<HomeView> {
                   color: colors.onSurface.withValues(alpha: 0.6), fontSize: 13),
             ),
             const SizedBox(height: 20),
-            if (a.isApproved) ...[
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(sheetCtx);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PaymentView(appointment: a),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.pix, color: Color(0xFF10B981)),
-                  label: const Text('Pagar agora',
-                      style: TextStyle(color: Color(0xFF10B981))),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF10B981)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
+            if (a.isApproved)
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -255,8 +231,8 @@ class _HomeViewState extends State<HomeView> {
                         borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
-              ),
-            ] else
+              )
+            else
               Center(
                 child: Text(
                   'Nenhuma ação disponível',
