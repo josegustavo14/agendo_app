@@ -33,4 +33,11 @@ class ServiceTypeRepository {
       throw Exception('Erro ao criar tipo de serviço');
     }
   }
+
+  Future<void> deleteServiceType(int id) async {
+    final response = await apiService.delete('/service-types/$id');
+    if (response.statusCode != 204) {
+      throw Exception('Erro ao remover serviço: ${response.statusCode}');
+    }
+  }
 }
