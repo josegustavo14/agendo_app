@@ -1,5 +1,4 @@
 import 'package:agendo/view/components/appointment_card_skeleton.dart';
-import 'package:agendo/view/payment_view.dart';
 import 'package:agendo/view/select_profession_view.dart';
 import 'package:agendo/view_models/auth_view_model.dart';
 import 'package:flutter/material.dart';
