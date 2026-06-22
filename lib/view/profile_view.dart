@@ -74,7 +74,7 @@ class _ProfileViewState extends State<ProfileView> {
                 const SizedBox(height: 20),
                 _buildProfessionalSection(colors, user.professionalProfile!),
               ],
-              if (user.clientProfile != null) ...[
+              if (user.clientProfile != null && _hasClientInfo(user.clientProfile!)) ...[
                 const SizedBox(height: 20),
                 _buildClientSection(colors, user.clientProfile!),
               ],
@@ -184,6 +184,11 @@ class _ProfileViewState extends State<ProfileView> {
       ],
     );
   }
+
+  bool _hasClientInfo(ClientProfile profile) =>
+      (profile.taxId != null && profile.taxId!.isNotEmpty) ||
+      (profile.preferredPaymentMethod != null &&
+          profile.preferredPaymentMethod!.isNotEmpty);
 
   Widget _buildClientSection(ColorScheme colors, ClientProfile profile) {
     return _card(
