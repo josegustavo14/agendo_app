@@ -33,4 +33,23 @@ class UserRepository {
       throw Exception('Erro ao buscar perfil');
     }
   }
+
+  /// PATCH /users/me/professional-profile — atualiza profissão/bio/disponibilidade
+  /// do profissional autenticado. Campos nulos são ignorados pelo backend.
+  Future<UserModel> updateProfessionalProfile({
+    int? professionId,
+    String? bio,
+    bool? isAvailable,
+  }) async {
+    final response = await apiService.patch('/users/me/professional-profile', body: {
+      if (professionId != null) 'professionId': professionId,
+      if (bio != null) 'bio': bio,
+      if (isAvailable != null) 'isAvailable': isAvailable,
+    });
+
+    if (response.statusCode == 200) {
+      return UserModel.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Erro ao atualizar perfil profissional: ${response.statusCode}');
+  }
 }
