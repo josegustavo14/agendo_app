@@ -1,5 +1,6 @@
 import 'package:agendo/view/components/appointment_card_skeleton.dart';
-import 'package:agendo/view/select_professional_view.dart';
+import 'package:agendo/view/payment_view.dart';
+import 'package:agendo/view/select_profession_view.dart';
 import 'package:agendo/view_models/auth_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -20,7 +21,8 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HomeViewModel>().loadAppointments();
+      final isProfessional = context.read<AuthViewModel>().user?.professionalProfile != null;
+      context.read<HomeViewModel>().loadAppointments(isProfessional: isProfessional);
     });
   }
 
@@ -32,26 +34,27 @@ class _HomeViewState extends State<HomeView> {
     final clientName = authVm.user?.name.split(' ').first ?? 'Usuário';
 
     return Scaffold(
-      // Botão Fixo em baixo
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(24.0),
         child: ElevatedButton(
           onPressed: () async {
+            final isProfessional = context.read<AuthViewModel>().user?.professionalProfile != null;
+            final homeVm = context.read<HomeViewModel>();
             final created = await Navigator.of(context).push<bool>(
-              MaterialPageRoute(builder: (_) => const SelectProfessionalView()),
+              MaterialPageRoute(builder: (_) => const SelectProfessionView()),
             );
             if (created == true && mounted) {
-              context.read<HomeViewModel>().loadAppointments();
+              homeVm.loadAppointments(isProfessional: isProfessional);
             }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: colors.primary,
             foregroundColor: colors.onPrimary,
-            minimumSize: const Size(double.infinity, 56), // Altura fixa
+            minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
           child: const Text(
-            "Agendar Agora",
+            'Agendar Agora',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
@@ -65,16 +68,14 @@ class _HomeViewState extends State<HomeView> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1400),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Sidebar esquerda com saudação
                     SizedBox(
                       width: 300,
                       child: _buildHeader(context, colors, clientName, isLateral: true),
                     ),
-                    // Lista de agendamentos com scroll próprio
                     Expanded(
-                      child: _buildScrollableContent(viewModel, colors, isWide: true),
+                      child: _buildContent(viewModel, colors, context, isWide: true),
                     ),
                   ],
                 ),
@@ -82,14 +83,15 @@ class _HomeViewState extends State<HomeView> {
             );
           }
 
-          // Layout Mobile (Vertical)
-          return SingleChildScrollView(
+          return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader(context, colors, clientName),
-                _buildScrollableContent(viewModel, colors),
+                Expanded(
+                  child: _buildContent(viewModel, colors, context),
+                ),
               ],
             ),
           );
@@ -98,8 +100,8 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  // Widget do Cabeçalho (Olá, João...)
-  Widget _buildHeader(BuildContext context, ColorScheme colors, String clientName, {bool isLateral = false}) {
+  Widget _buildHeader(BuildContext context, ColorScheme colors, String clientName,
+      {bool isLateral = false}) {
     final screenHeight = MediaQuery.of(context).size.height;
     return Padding(
       padding: EdgeInsets.only(
@@ -112,19 +114,23 @@ class _HomeViewState extends State<HomeView> {
         children: [
           Text.rich(
             TextSpan(
-              text: "Olá, ",
-              style: TextStyle(fontSize: titlefontsize, color: colors.onSurface, fontWeight: FontWeight.w300),
+              text: 'Olá, ',
+              style: TextStyle(
+                  fontSize: titlefontsize,
+                  color: colors.onSurface,
+                  fontWeight: FontWeight.w300),
               children: [
                 TextSpan(
                   text: clientName,
-                  style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: colors.primary, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            "Meus Agendamentos:",
+            'Meus Agendamentos:',
             style: TextStyle(color: colors.onSurface.withValues(alpha: 0.6)),
           ),
           if (isLateral) const SizedBox(height: 20),
@@ -133,39 +139,136 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  // Widget da Lista de Cards
-  Widget _buildScrollableContent(HomeViewModel viewModel, ColorScheme colors, {bool isWide = false}) {
+  Widget _buildContent(HomeViewModel viewModel, ColorScheme colors,
+      BuildContext context, {bool isWide = false}) {
+    final edgePadding = EdgeInsets.only(
+      top: isWide ? 32 : 16,
+      right: isWide ? 32 : 0,
+      bottom: 24,
+    );
+
     if (viewModel.isLoading) {
-      final skeletons = [
-        const AppointmentCardSkeleton(),
-        const AppointmentCardSkeleton(),
-        const AppointmentCardSkeleton(),
-      ];
-
-      if (isWide) {
-        return Padding(
-          padding: const EdgeInsets.only(top: 32, right: 32),
-          child: Column(children: skeletons),
-        );
-      }
-      return Padding(
-        padding: const EdgeInsets.only(top: 16),
-        child: Column(children: skeletons),
-      );
-    }
-
-    final cards = viewModel.appointments.map((a) => AppointmentCard(appointment: a)).toList();
-
-    if (isWide) {
       return SingleChildScrollView(
-        padding: const EdgeInsets.only(top: 32, right: 32, bottom: 24),
-        child: Column(children: cards),
+        padding: edgePadding,
+        child: const Column(children: [
+          AppointmentCardSkeleton(),
+          AppointmentCardSkeleton(),
+          AppointmentCardSkeleton(),
+        ]),
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 24),
-      child: Column(children: cards),
+    if (viewModel.appointments.isEmpty) {
+      return Center(
+        child: Text(
+          'Nenhum agendamento ativo',
+          style: TextStyle(color: colors.onSurface.withValues(alpha: 0.4)),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: edgePadding,
+      itemCount: viewModel.appointments.length,
+      itemBuilder: (_, i) {
+        final a = viewModel.appointments[i];
+        return AppointmentCard(
+          appointment: a,
+          onTap: () => _showActions(context, a, viewModel),
+        );
+      },
+    );
+  }
+
+  void _showActions(BuildContext context, dynamic a, HomeViewModel vm) {
+    final colors = Theme.of(context).colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              a.professionalName,
+              style: TextStyle(
+                  color: colors.onSurface,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              (a.services as List).join(', '),
+              style: TextStyle(
+                  color: colors.onSurface.withValues(alpha: 0.6), fontSize: 13),
+            ),
+            const SizedBox(height: 20),
+            if (a.isApproved) ...[
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(sheetCtx);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PaymentView(appointment: a),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.pix, color: Color(0xFF10B981)),
+                  label: const Text('Pagar agora',
+                      style: TextStyle(color: Color(0xFF10B981))),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFF10B981)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    Navigator.pop(sheetCtx);
+                    await vm.cancelAppointment(a.id);
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Agendamento cancelado')),
+                    );
+                  },
+                  icon: const Icon(Icons.close, color: Color(0xFFEF4444)),
+                  label: const Text('Cancelar agendamento',
+                      style: TextStyle(color: Color(0xFFEF4444))),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFEF4444)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ] else
+              Center(
+                child: Text(
+                  'Nenhuma ação disponível',
+                  style: TextStyle(
+                      color: colors.onSurface.withValues(alpha: 0.4),
+                      fontSize: 13),
+                ),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -8,9 +8,11 @@ import 'repositories/appointment_repository.dart';
 import 'repositories/user_repository.dart';
 import 'repositories/service_type_repository.dart';
 import 'repositories/professional_repository.dart';
+import 'repositories/payment_repository.dart';
 import 'view_models/auth_view_model.dart';
 import 'view_models/home_view_model.dart';
 import 'view_models/profile_view_model.dart';
+import 'view_models/payment_view_model.dart';
 
 void main() {
   final apiService = ApiService();
@@ -24,6 +26,7 @@ void main() {
         Provider(create: (_) => UserRepository(apiService: apiService)),
         Provider(create: (_) => ServiceTypeRepository(apiService: apiService)),
         Provider(create: (_) => ProfessionalRepository(apiService: apiService)),
+        Provider(create: (_) => PaymentRepository(apiService: apiService)),
         ChangeNotifierProvider(
           create: (context) => AuthViewModel(
             repository: context.read<AuthRepository>(),
@@ -37,6 +40,11 @@ void main() {
         ChangeNotifierProvider(
           create: (context) => ProfileViewModel(
             repository: context.read<UserRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => PaymentViewModel(
+            repository: context.read<PaymentRepository>(),
           ),
         ),
       ],
