@@ -207,7 +207,9 @@ class _SelectProfessionalViewState extends State<SelectProfessionalView> {
                                 crossAxisCount: constraints.maxWidth >= 1200 ? 3 : 2,
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
-                                childAspectRatio: 2.4,
+                                // Cards mais cheios em wide pra dar respiro
+                                // ao conteúdo e evitar fonte minúscula relativa.
+                                childAspectRatio: 3.3,
                               ),
                               itemCount: _professionals.length,
                               itemBuilder: (context, index) => _ProfessionalCard(
@@ -243,6 +245,10 @@ class _ProfessionalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    // Em wide o card ocupa colunas grandes da grid; sem escala as fontes
+    // mobile (17/13/12) viram letrinha minúscula relativa ao card.
+    final isWide = MediaQuery.of(context).size.width >= 800;
+    final scale = isWide ? 1.35 : 1.0;
 
     return GestureDetector(
       onTap: onTap,
@@ -251,23 +257,23 @@ class _ProfessionalCard extends StatelessWidget {
         color: colors.onSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(isWide ? 20 : 16),
           child: Row(
             children: [
               // Avatar
               CircleAvatar(
-                radius: 28,
+                radius: isWide ? 36 : 28,
                 backgroundColor: colors.primary.withValues(alpha: 0.2),
                 child: Text(
                   professional.name.isNotEmpty ? professional.name[0].toUpperCase() : '?',
                   style: TextStyle(
                     color: colors.primary,
-                    fontSize: 22,
+                    fontSize: 22 * scale,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: isWide ? 18 : 14),
 
               // Info
               Expanded(
@@ -278,7 +284,7 @@ class _ProfessionalCard extends StatelessWidget {
                       professional.name,
                       style: TextStyle(
                         color: colors.surface,
-                        fontSize: 17,
+                        fontSize: 17 * scale,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -287,7 +293,7 @@ class _ProfessionalCard extends StatelessWidget {
                       professional.professionName,
                       style: TextStyle(
                         color: colors.primary,
-                        fontSize: 13,
+                        fontSize: 13 * scale,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.5,
                       ),
@@ -300,7 +306,7 @@ class _ProfessionalCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: colors.surface.withValues(alpha: 0.6),
-                          fontSize: 13,
+                          fontSize: 13 * scale,
                         ),
                       ),
                     ],
@@ -315,14 +321,14 @@ class _ProfessionalCard extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.star, size: 16, color: Colors.amber),
+                      Icon(Icons.star, size: 16 * scale, color: Colors.amber),
                       const SizedBox(width: 2),
                       Text(
                         professional.ratingAverage.toStringAsFixed(1),
                         style: TextStyle(
                           color: colors.surface,
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 13 * scale,
                         ),
                       ),
                     ],
@@ -332,14 +338,16 @@ class _ProfessionalCard extends StatelessWidget {
                     'R\$ ${professional.hourlyRate.toStringAsFixed(0)}/h',
                     style: TextStyle(
                       color: colors.surface.withValues(alpha: 0.7),
-                      fontSize: 12,
+                      fontSize: 12 * scale,
                     ),
                   ),
                 ],
               ),
 
               const SizedBox(width: 4),
-              Icon(Icons.chevron_right, color: colors.surface.withValues(alpha: 0.4)),
+              Icon(Icons.chevron_right,
+                  size: 24 * (isWide ? 1.2 : 1.0),
+                  color: colors.surface.withValues(alpha: 0.4)),
             ],
           ),
         ),
