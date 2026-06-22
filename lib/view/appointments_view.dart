@@ -4,6 +4,7 @@ import '../models/appointment_model.dart';
 import '../view_models/appointments_view_model.dart';
 import 'components/appointment_card.dart';
 import 'components/appointment_status_badge.dart';
+import 'payment_view.dart';
 import 'ratings_view.dart';
 
 class AppointmentsView extends StatefulWidget {
@@ -304,7 +305,23 @@ class _AppointmentsViewState extends State<AppointmentsView>
             const SizedBox(height: 4),
             AppointmentStatusBadge(status: a.status),
             const SizedBox(height: 20),
-            if (a.isApproved)
+            if (a.isApproved) ...[
+              _actionButton(
+                context,
+                label: 'Pagar agora',
+                icon: Icons.pix,
+                color: const Color(0xFF10B981),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PaymentView(appointment: a),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
               _actionButton(
                 context,
                 label: 'Cancelar agendamento',
@@ -317,6 +334,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                   _feedback(context, ok, 'Agendamento cancelado');
                 },
               ),
+            ],
             if (a.isCompleted)
               _actionButton(
                 context,
