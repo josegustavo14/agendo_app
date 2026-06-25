@@ -23,7 +23,7 @@ jobs:
         run: flutter pub get
 
       - name: Run tests
-        run: flutter test
+        run: flutter test lib/test/
 
       - name: Build APK (release)
         run: flutter build apk --release

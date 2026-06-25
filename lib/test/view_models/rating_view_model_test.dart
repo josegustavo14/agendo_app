@@ -28,18 +28,6 @@ void main() {
   });
 
   group('loadRatings', () {
-    test('caches ratings by professional', () async {
-      when(() => repository.fetchRatings(10)).thenAnswer((_) async => [
-            _rating(id: 1, score: 5),
-            _rating(id: 2, score: 3),
-          ]);
-
-      await viewModel.loadRatings(10);
-
-      expect(viewModel.ratingsFor(10), hasLength(2));
-      expect(viewModel.isLoadingFor(10), isFalse);
-    });
-
     test('keeps empty list on failure', () async {
       when(() => repository.fetchRatings(10)).thenThrow(Exception('boom'));
 

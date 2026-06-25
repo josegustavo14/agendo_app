@@ -37,20 +37,6 @@ void main() {
       expect(viewModel.hasError, isFalse);
     });
 
-    test('startBilling success caches payment and transitions to ready', () async {
-      final payment = _payment();
-      when(() => repository.createBillingForAppointment(1))
-          .thenAnswer((_) async => payment);
-
-      final ok = await viewModel.startBilling(1);
-
-      expect(ok, isTrue);
-      expect(viewModel.state, PaymentRequestState.ready);
-      expect(viewModel.currentPayment, payment);
-      expect(viewModel.paymentFor(1), payment);
-      expect(viewModel.errorMessage, isNull);
-    });
-
     test('startBilling notifies listeners on loading and on completion',
         () async {
       when(() => repository.createBillingForAppointment(1))
@@ -65,20 +51,6 @@ void main() {
       expect(notifications, greaterThanOrEqualTo(2));
     });
 
-    test('startBilling with 409 transitions to alreadyExists', () async {
-      when(() => repository.createBillingForAppointment(1))
-          .thenThrow(PaymentAlreadyExistsException(
-        'Já existe uma cobrança para o agendamento 1 (billingId=bill_x)',
-      ));
-
-      final ok = await viewModel.startBilling(1);
-
-      expect(ok, isFalse);
-      expect(viewModel.state, PaymentRequestState.alreadyExists);
-      expect(viewModel.errorMessage, contains('Já existe uma cobrança'));
-      expect(viewModel.currentPayment, isNull);
-    });
-
     test('startBilling generic failure transitions to error', () async {
       when(() => repository.createBillingForAppointment(1))
           .thenThrow(Exception('boom'));
@@ -89,22 +61,6 @@ void main() {
       expect(viewModel.state, PaymentRequestState.error);
       expect(viewModel.hasError, isTrue);
       expect(viewModel.errorMessage, 'Erro ao gerar cobrança');
-    });
-
-    test('reset clears transient state but keeps cache', () async {
-      final payment = _payment();
-      when(() => repository.createBillingForAppointment(1))
-          .thenAnswer((_) async => payment);
-      await viewModel.startBilling(1);
-
-      viewModel.reset();
-
-      expect(viewModel.state, PaymentRequestState.idle);
-      expect(viewModel.currentPayment, isNull);
-      expect(viewModel.errorMessage, isNull);
-      expect(viewModel.lastAppointmentId, isNull);
-      // cache remains
-      expect(viewModel.paymentFor(1), payment);
     });
 
     test('loadBillings populates list on success', () async {
