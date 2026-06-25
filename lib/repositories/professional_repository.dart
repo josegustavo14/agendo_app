@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:agendo/models/profession_model.dart';
 import 'package:agendo/models/professional_model.dart';
 import 'package:agendo/models/service_type_model.dart';
@@ -37,11 +38,14 @@ class ProfessionalRepository {
       queryParams: queryParams.isNotEmpty ? queryParams : null,
     );
 
+    debugPrint('[ProfessionalRepository] GET /professionals status: ${response.statusCode}');
+    debugPrint('[ProfessionalRepository] body: ${response.body}');
+
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => ProfessionalModel.fromJson(json)).toList();
     } else {
-      throw Exception('Erro ao buscar profissionais');
+      throw Exception('Erro ao buscar profissionais: ${response.statusCode} ${response.body}');
     }
   }
 

@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:agendo/models/professional_model.dart';
 import 'package:agendo/models/service_type_model.dart';
+import 'package:agendo/models/time_slot_model.dart';
 import 'package:agendo/repositories/professional_repository.dart';
 import 'package:agendo/repositories/appointment_repository.dart';
+import 'package:agendo/repositories/availability_repository.dart';
+import 'package:agendo/models/rating_model.dart';
 import 'package:agendo/view_models/auth_view_model.dart';
+import 'package:agendo/view_models/rating_view_model.dart';
+import 'components/rating_bar_widget.dart';
 
 class BookAppointmentView extends StatefulWidget {
   final ProfessionalModel professional;
@@ -19,7 +24,11 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
   List<ServiceTypeModel> _services = [];
   ServiceTypeModel? _selectedService;
   DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+  String? _selectedSlot; // "HH:mm"
+
+  List<TimeSlotModel> _slots = [];
+  bool _isLoadingSlots = false;
+  bool _noSchedule = false;
 
   bool _isLoadingServices = true;
   bool _isSubmitting = false;
@@ -27,7 +36,10 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadServices());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadServices();
+      context.read<RatingViewModel>().loadRatings(widget.professional.id);
+    });
   }
 
   Future<void> _loadServices() async {
@@ -53,19 +65,39 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
       firstDate: now,
       lastDate: now.add(const Duration(days: 365)),
     );
-    if (date != null) setState(() => _selectedDate = date);
+    if (date == null || !mounted) return;
+    setState(() {
+      _selectedDate = date;
+      _selectedSlot = null;
+      _slots = [];
+    });
+    await _loadSlots(date);
   }
 
-  Future<void> _pickTime() async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime ?? const TimeOfDay(hour: 9, minute: 0),
-    );
-    if (time != null) setState(() => _selectedTime = time);
+  Future<void> _loadSlots(DateTime date) async {
+    setState(() {
+      _isLoadingSlots = true;
+      _noSchedule = false;
+    });
+    try {
+      final slots = await context
+          .read<AvailabilityRepository>()
+          .getSlots(widget.professional.id, date);
+      if (mounted) {
+        setState(() {
+          _slots = slots;
+          _noSchedule = slots.isEmpty;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _noSchedule = true);
+    } finally {
+      if (mounted) setState(() => _isLoadingSlots = false);
+    }
   }
 
   bool get _canSubmit =>
-      _selectedService != null && _selectedDate != null && _selectedTime != null;
+      _selectedService != null && _selectedDate != null && _selectedSlot != null;
 
   Future<void> _handleSubmit() async {
     if (!_canSubmit) return;
@@ -73,25 +105,21 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
     setState(() => _isSubmitting = true);
 
     final authUser = context.read<AuthViewModel>().user!;
+    final timeParts = _selectedSlot!.split(':');
     final scheduleDate = DateTime(
       _selectedDate!.year,
       _selectedDate!.month,
       _selectedDate!.day,
-      _selectedTime!.hour,
-      _selectedTime!.minute,
+      int.parse(timeParts[0]),
+      int.parse(timeParts[1]),
     );
-
-    // Valor baseado na taxa horária do profissional (1h por padrão)
-    final valueInCents = (widget.professional.hourlyRate * 100).round();
-
 
     try {
       final repo = context.read<AppointmentRepository>();
       await repo.createAppointment(
         professionalId: widget.professional.id,
         clientId: authUser.id,
-        serviceTypeId: _selectedService!.id,
-        valueInCents: valueInCents,
+        serviceTypeIds: [_selectedService!.id],
         scheduleDate: scheduleDate,
       );
 
@@ -171,7 +199,7 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                     ),
                   ),
                   const SizedBox(width: 32),
-                  // Right: date, time, summary, button
+                  // Right: date, slots, summary, button
                   Expanded(
                     flex: 4,
                     child: Column(
@@ -179,15 +207,21 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                       children: [
                         Text('Data e Horário', style: TextStyle(color: colors.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(child: _buildDateButton(colors)),
-                            const SizedBox(width: 12),
-                            Expanded(child: _buildTimeButton(colors)),
-                          ],
+                        _buildDateButton(colors),
+                        const SizedBox(height: 16),
+                        _buildSlotGrid(colors),
+                        if (_canSubmit) ...[
+                          const SizedBox(height: 28),
+                          _buildSummary(colors, pro),
+                        ],
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 28),
+                              child: _buildRatingsSection(colors),
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 28),
-                        if (_canSubmit) _buildSummary(colors, pro),
                         const SizedBox(height: 16),
                         confirmButton,
                       ],
@@ -221,9 +255,15 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
             const SizedBox(height: 28),
             Text('Data e Horário', style: TextStyle(color: colors.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            Row(children: [Expanded(child: _buildDateButton(colors)), const SizedBox(width: 12), Expanded(child: _buildTimeButton(colors))]),
+            _buildDateButton(colors),
+            const SizedBox(height: 16),
+            _buildSlotGrid(colors),
             const SizedBox(height: 28),
-            if (_canSubmit) _buildSummary(colors, pro),
+            if (_canSubmit) ...[
+              _buildSummary(colors, pro),
+              const SizedBox(height: 28),
+            ],
+            _buildRatingsSection(colors),
             const SizedBox(height: 24),
           ],
         ),
@@ -287,27 +327,35 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                     ),
                   ],
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.star, size: 16, color: Colors.amber),
-                      const SizedBox(width: 4),
-                      Text(
-                        pro.ratingAverage.toStringAsFixed(1),
-                        style: TextStyle(
-                          color: colors.surface,
-                          fontWeight: FontWeight.bold,
+                  Builder(builder: (ctx) {
+                    final ratingVm = ctx.watch<RatingViewModel>();
+                    final average = ratingVm.averageFor(pro.id);
+                    final isLoading = ratingVm.isLoadingFor(pro.id);
+                    return Row(
+                      children: [
+                        if (isLoading)
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 1.5, color: Colors.amber),
+                          )
+                        else
+                          RatingBarWidget(
+                              rating: average ?? 0.0, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          average != null
+                              ? average.toStringAsFixed(1)
+                              : 'Sem avaliações',
+                          style: TextStyle(
+                            color: colors.surface.withValues(alpha: 0.8),
+                            fontSize: 13,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        'R\$ ${pro.hourlyRate.toStringAsFixed(2).replaceAll('.', ',')}/h',
-                        style: TextStyle(
-                          color: colors.surface.withValues(alpha: 0.7),
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    );
+                  }),
                 ],
               ),
             ),
@@ -398,6 +446,18 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
                     ],
                   ),
                 ),
+                if (service.price != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text(
+                      service.formattedPrice,
+                      style: TextStyle(
+                        color: isSelected ? colors.primary : colors.onSurface,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
                 if (isSelected)
                   Icon(Icons.check_circle, color: colors.primary, size: 22),
               ],
@@ -432,13 +492,16 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
               color: hasDate ? colors.primary : colors.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(width: 10),
-            Text(
-              hasDate
-                  ? '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}'
-                  : 'Selecionar data',
-              style: TextStyle(
-                color: hasDate ? colors.onSurface : colors.onSurface.withValues(alpha: 0.5),
-                fontWeight: hasDate ? FontWeight.w600 : FontWeight.normal,
+            Flexible(
+              child: Text(
+                hasDate
+                    ? '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}'
+                    : 'Selecionar data',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: hasDate ? colors.onSurface : colors.onSurface.withValues(alpha: 0.5),
+                  fontWeight: hasDate ? FontWeight.w600 : FontWeight.normal,
+                ),
               ),
             ),
           ],
@@ -447,52 +510,156 @@ class _BookAppointmentViewState extends State<BookAppointmentView> {
     );
   }
 
-  Widget _buildTimeButton(ColorScheme colors) {
-    final hasTime = _selectedTime != null;
-    return GestureDetector(
-      onTap: _pickTime,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        decoration: BoxDecoration(
-          color: hasTime
-              ? colors.primary.withValues(alpha: 0.12)
-              : colors.onSurface.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: hasTime ? colors.primary : Colors.transparent,
-            width: hasTime ? 2 : 0,
+  Widget _buildSlotGrid(ColorScheme colors) {
+    if (_selectedDate == null) return const SizedBox.shrink();
+
+    if (_isLoadingSlots) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Center(child: CircularProgressIndicator(color: colors.primary, strokeWidth: 2)),
+      );
+    }
+
+    if (_noSchedule || _slots.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text(
+          'Nenhum horário disponível para esta data.',
+          style: TextStyle(color: colors.onSurface.withValues(alpha: 0.5), fontSize: 13),
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _slots.map((slot) {
+        final isSelected = _selectedSlot == slot.time;
+        final isAvailable = slot.available;
+        return GestureDetector(
+          onTap: isAvailable ? () => setState(() => _selectedSlot = slot.time) : null,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: !isAvailable
+                  ? colors.onSurface.withValues(alpha: 0.05)
+                  : isSelected
+                      ? colors.primary
+                      : colors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected ? colors.primary : Colors.transparent,
+              ),
+            ),
+            child: Text(
+              slot.time,
+              style: TextStyle(
+                color: !isAvailable
+                    ? colors.onSurface.withValues(alpha: 0.3)
+                    : isSelected
+                        ? colors.onPrimary
+                        : colors.primary,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                fontSize: 13,
+                decoration: !isAvailable ? TextDecoration.lineThrough : null,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildRatingsSection(ColorScheme colors) {
+    final ratingVm = context.watch<RatingViewModel>();
+    final ratings = ratingVm.ratingsFor(widget.professional.id);
+    final isLoading = ratingVm.isLoadingFor(widget.professional.id);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Avaliações',
+          style: TextStyle(
+            color: colors.onSurface,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.access_time,
-              size: 20,
-              color: hasTime ? colors.primary : colors.onSurface.withValues(alpha: 0.5),
-            ),
-            const SizedBox(width: 10),
+        const SizedBox(height: 12),
+        if (isLoading)
+          Center(child: CircularProgressIndicator(color: colors.primary, strokeWidth: 2))
+        else if (ratings.isEmpty)
+          Text(
+            'Nenhuma avaliação ainda',
+            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.4)),
+          )
+        else
+          ...ratings.map((r) => _buildRatingCard(colors, r)),
+      ],
+    );
+  }
+
+  Widget _buildRatingCard(ColorScheme colors, RatingModel r) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.onSurface.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 14,
+                backgroundColor: colors.primary.withValues(alpha: 0.15),
+                child: Text(
+                  r.clientName.isNotEmpty ? r.clientName[0].toUpperCase() : '?',
+                  style: TextStyle(
+                    color: colors.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  r.clientName,
+                  style: TextStyle(
+                    color: colors.onSurface,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              RatingBarWidget(rating: r.score.toDouble(), size: 13),
+            ],
+          ),
+          if (r.comment != null && r.comment!.isNotEmpty) ...[
+            const SizedBox(height: 8),
             Text(
-              hasTime
-                  ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
-                  : 'Selecionar horário',
+              r.comment!,
               style: TextStyle(
-                color: hasTime ? colors.onSurface : colors.onSurface.withValues(alpha: 0.5),
-                fontWeight: hasTime ? FontWeight.w600 : FontWeight.normal,
+                color: colors.onSurface.withValues(alpha: 0.75),
+                fontSize: 13,
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildSummary(ColorScheme colors, ProfessionalModel pro) {
-    final valueInCents = (pro.hourlyRate * 100).round();
+    final valueInCents = ((_selectedService!.price ?? 0.0) * 100).round();
     final formattedValue = 'R\$ ${(valueInCents / 100).toStringAsFixed(2).replaceAll('.', ',')}';
     final dateStr =
         '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}';
-    final timeStr =
-        '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
+    final timeStr = _selectedSlot!;
 
     return Container(
       padding: const EdgeInsets.all(20),

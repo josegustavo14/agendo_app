@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:agendo/models/appointment_model.dart';
+import 'package:agendo/models/timeline_entry_model.dart';
 import 'package:agendo/services/api_service.dart';
 
 class AppointmentRepository {
@@ -7,32 +9,72 @@ class AppointmentRepository {
 
   AppointmentRepository({required this.apiService});
 
-  Future<List<AppointmentModel>> fetchAppointments({String? role}) async {
-    final queryParams = <String, String>{};
-    if (role != null) queryParams['role'] = role;
+  Future<List<AppointmentModel>> fetchActive() async {
+    final response = await apiService.get('/appointments/active');
 
-    final response = await apiService.get('/appointments', queryParams: queryParams.isNotEmpty ? queryParams : null);
+    if (response.statusCode == 200) {
+      debugPrint('Appointments fetched successfully: ${response.body}');
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => AppointmentModel.fromJson(json)).toList();
+    } else {
+      debugPrint('Error fetching appointments: ${response.statusCode} - ${response.body}');
+      throw Exception('Erro ao buscar agendamentos');
+    }
+  }
+
+  Future<List<AppointmentModel>> fetchArchive() async {
+    final response = await apiService.get('/appointments/archive');
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => AppointmentModel.fromJson(json)).toList();
     } else {
-      throw Exception('Erro ao buscar agendamentos');
+      throw Exception('Erro ao buscar histórico de agendamentos');
+    }
+  }
+
+  Future<AppointmentModel> getById(int id) async {
+    final response = await apiService.get('/appointments/$id');
+
+    if (response.statusCode == 200) {
+      return AppointmentModel.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Agendamento não encontrado');
+    }
+  }
+
+  Future<List<TimelineEntryModel>> getTimeline(int id) async {
+    final response = await apiService.get('/appointments/$id/timeline');
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => TimelineEntryModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Erro ao buscar timeline de agendamentos');
+    }
+  }
+
+  Future<List<AppointmentModel>> fetchProfessionalAppointments() async {
+    final response = await apiService.get('/appointments/professional');
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => AppointmentModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Erro ao buscar agendamentos do profissional');
     }
   }
 
   Future<AppointmentModel> createAppointment({
     required int professionalId,
     required int clientId,
-    required int serviceTypeId,
-    required int valueInCents,
+    required List<int> serviceTypeIds,
     required DateTime scheduleDate,
   }) async {
     final response = await apiService.post('/appointments', body: {
       'professionalId': professionalId,
       'clientId': clientId,
-      'serviceTypeId': serviceTypeId,
-      'valueInCents': valueInCents,
+      'serviceTypeIds': serviceTypeIds,
       'scheduleDate': scheduleDate.toIso8601String(),
     });
 
@@ -41,5 +83,37 @@ class AppointmentRepository {
     } else {
       throw Exception('Erro ao criar agendamento');
     }
+  }
+
+  Future<AppointmentModel> approveAppointment(int id) async {
+    final response = await apiService.patch('/appointments/$id/approve');
+    if (response.statusCode == 200) {
+      return AppointmentModel.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Erro ao aprovar agendamento');
+  }
+
+  Future<AppointmentModel> rejectAppointment(int id) async {
+    final response = await apiService.patch('/appointments/$id/reject');
+    if (response.statusCode == 200) {
+      return AppointmentModel.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Erro ao rejeitar agendamento');
+  }
+
+  Future<AppointmentModel> cancelAppointment(int id) async {
+    final response = await apiService.patch('/appointments/$id/cancel');
+    if (response.statusCode == 200) {
+      return AppointmentModel.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Erro ao cancelar agendamento');
+  }
+
+  Future<AppointmentModel> completeAppointment(int id) async {
+    final response = await apiService.patch('/appointments/$id/complete');
+    if (response.statusCode == 200) {
+      return AppointmentModel.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Erro ao concluir agendamento');
   }
 }

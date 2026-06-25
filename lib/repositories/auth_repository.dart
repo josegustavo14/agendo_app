@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'package:agendo/models/user_model.dart';
 import 'package:agendo/services/api_service.dart';
+import 'package:agendo/services/token_storage.dart';
 import 'package:flutter/material.dart';
 
 class AuthRepository {
   final ApiService apiService;
+  final TokenStorage tokenStorage;
 
-  AuthRepository({required this.apiService});
+  AuthRepository({required this.apiService, required this.tokenStorage});
 
   Future<UserModel> login(String email, String password) async {
     final response = await apiService.post('/users/login', body: {
@@ -16,7 +18,14 @@ class AuthRepository {
 
     if (response.statusCode == 200) {
       final user = UserModel.fromJson(jsonDecode(response.body));
-      if (user.token != null) apiService.setToken(user.token!);
+      if (user.token != null) {
+        apiService.setToken(user.token!);
+        try {
+          await tokenStorage.saveToken(email, user.token!);
+        } catch (e) {
+          debugPrint('[AuthRepository] Falha ao persistir token: $e');
+        }
+      }
       return user;
     } else {
       throw Exception('Email ou senha inválidos');
@@ -48,7 +57,12 @@ class AuthRepository {
     }
   }
 
-  void logout() {
+  Future<void> logout(String email) async {
+    try {
+      await tokenStorage.clearToken(email);
+    } catch (e) {
+      debugPrint('[AuthRepository] Falha ao limpar token: $e');
+    }
     apiService.clearToken();
   }
 }
