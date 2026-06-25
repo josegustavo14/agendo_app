@@ -1,4 +1,5 @@
 import 'package:agendo/view/components/appointment_card_skeleton.dart';
+import 'package:agendo/view/payment_view.dart';
 import 'package:agendo/view/select_profession_view.dart';
 import 'package:agendo/view_models/auth_view_model.dart';
 import 'package:flutter/material.dart';
@@ -32,39 +33,41 @@ class _HomeViewState extends State<HomeView> {
     final authVm = context.watch<AuthViewModel>();
     final clientName = authVm.user?.name.split(' ').first ?? 'Usuário';
 
-    return Scaffold(
-      // Botão Fixo em baixo (limitado em wide pra não virar uma faixa fina)
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: ElevatedButton(
-              onPressed: () async {
-                final isProfessional = context.read<AuthViewModel>().user?.professionalProfile != null;
-                final homeVm = context.read<HomeViewModel>();
-                final created = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(builder: (_) => const SelectProfessionView()),
-                );
-                if (created == true && mounted) {
-                  homeVm.loadAppointments(isProfessional: isProfessional);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.primary,
-                foregroundColor: colors.onPrimary,
-                minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-              child: const Text(
-                'Agendar Agora',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+    // Sem Scaffold próprio — o BottomNavigationBarPage já provê um.
+    // Scaffold aninhado estava deixando o body invisível em certos layouts.
+    final button = Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: ElevatedButton(
+            onPressed: () async {
+              final isProfessional = context.read<AuthViewModel>().user?.professionalProfile != null;
+              final homeVm = context.read<HomeViewModel>();
+              final created = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(builder: (_) => const SelectProfessionView()),
+              );
+              if (created == true && mounted) {
+                homeVm.loadAppointments(isProfessional: isProfessional);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colors.primary,
+              foregroundColor: colors.onPrimary,
+              minimumSize: const Size(double.infinity, 56),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: const Text(
+              'Agendar Agora',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
         ),
       ),
-      body: LayoutBuilder(
+    );
+
+    return SafeArea(
+      child: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth > 800;
 
@@ -80,7 +83,14 @@ class _HomeViewState extends State<HomeView> {
                       child: _buildHeader(context, colors, clientName, isLateral: true),
                     ),
                     Expanded(
-                      child: _buildContent(viewModel, colors, context, isWide: true),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: _buildContent(viewModel, colors, context, isWide: true),
+                          ),
+                          button,
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -97,6 +107,7 @@ class _HomeViewState extends State<HomeView> {
                 Expanded(
                   child: _buildContent(viewModel, colors, context),
                 ),
+                button,
               ],
             ),
           );
@@ -214,7 +225,32 @@ class _HomeViewState extends State<HomeView> {
                   color: colors.onSurface.withValues(alpha: 0.6), fontSize: 13),
             ),
             const SizedBox(height: 20),
-            if (a.isApproved)
+            if (a.isApproved || a.isPaid) ...[
+              if (a.isApproved)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(sheetCtx);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PaymentView(appointment: a),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.pix, color: Color(0xFF10B981)),
+                    label: const Text('Pagar agora',
+                        style: TextStyle(color: Color(0xFF10B981))),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF10B981)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              if (a.isApproved) const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -236,8 +272,8 @@ class _HomeViewState extends State<HomeView> {
                         borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
-              )
-            else
+              ),
+            ] else
               Center(
                 child: Text(
                   'Nenhuma ação disponível',

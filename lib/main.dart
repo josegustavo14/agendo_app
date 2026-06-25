@@ -12,12 +12,15 @@ import 'repositories/user_repository.dart';
 import 'repositories/service_type_repository.dart';
 import 'repositories/professional_repository.dart';
 import 'repositories/rating_repository.dart';
+import 'repositories/payment_repository.dart';
 import 'view_models/auth_view_model.dart';
 import 'view_models/home_view_model.dart';
 import 'view_models/history_view_model.dart';
 import 'view_models/profile_view_model.dart';
 import 'view_models/appointments_view_model.dart';
 import 'view_models/rating_view_model.dart';
+import 'view_models/payment_view_model.dart';
+import 'view_models/manage_professional_profile_view_model.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -39,6 +42,7 @@ void main() {
         Provider(create: (_) => ProfessionalRepository(apiService: apiService)),
         Provider(create: (_) => RatingRepository(apiService: apiService)),
         Provider(create: (_) => AvailabilityRepository(apiService: apiService)),
+        Provider(create: (_) => PaymentRepository(apiService: apiService)),
         ChangeNotifierProvider(
           create: (context) => AuthViewModel(
             repository: context.read<AuthRepository>(),
@@ -68,6 +72,18 @@ void main() {
         ChangeNotifierProvider(
           create: (context) => RatingViewModel(
             repository: context.read<RatingRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => PaymentViewModel(
+            repository: context.read<PaymentRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ManageProfessionalProfileViewModel(
+            professionalRepository: context.read<ProfessionalRepository>(),
+            userRepository: context.read<UserRepository>(),
+            serviceTypeRepository: context.read<ServiceTypeRepository>(),
           ),
         ),
       ],

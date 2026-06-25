@@ -44,6 +44,7 @@ class AppointmentModel {
 
   bool get isPending => status == 'PENDING';
   bool get isApproved => status == 'APPROVED';
+  bool get isPaid => status == 'PAID';
   bool get isCompleted => status == 'COMPLETED';
   bool get isCancelled => status == 'CANCELLED';
   bool get isRejected => status == 'REJECTED';

@@ -1,0 +1,79 @@
+name: Frontend CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  test-and-build:
+    name: Test, Build APK & Web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build APK (release)
+        run: flutter build apk --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agendo-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: Build Web (release)
+        run: flutter build web --release
+
+      - name: Upload Web bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: agendo-web
+          path: build/web
+
+  deploy:
+    name: Deploy Web to VPS (prod)
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: agendo-web
+          path: web-build
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Rsync Web bundle to VPS
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_ed25519" \
+            web-build/ root@${{ secrets.SSH_HOST }}:/opt/agendo/web/
+
+      - name: Recreate Caddy container
+        run: |
+          ssh -i ~/.ssh/id_ed25519 root@${{ secrets.SSH_HOST }} \
+            "cd /opt/agendo && docker compose -f docker-compose.prod.yml up -d --force-recreate caddy"
+
+      - name: Smoke test
+        run: |
+          curl -fsS -o /dev/null -w "Web status=%{http_code}\n" \
+            https://oortcloud.com.br/

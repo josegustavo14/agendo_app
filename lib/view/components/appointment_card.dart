@@ -202,6 +202,7 @@ class _StatusBadge extends StatelessWidget {
     final (label, color) = switch (status) {
       'PENDING'   => ('Pendente',  Colors.amber),
       'APPROVED'  => ('Aprovado',  Colors.green),
+      'PAID'      => ('Pago',      Colors.teal),
       'COMPLETED' => ('Concluído', Colors.blue),
       'CANCELLED' => ('Cancelado', Colors.grey),
       'REJECTED'  => ('Rejeitado', Colors.red),

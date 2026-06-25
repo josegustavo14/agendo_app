@@ -4,6 +4,7 @@ import '../view_models/auth_view_model.dart';
 import '../view_models/appointments_view_model.dart';
 import 'components/appointment_card.dart';
 import 'appointments_view.dart';
+import 'manage_professional_profile_view.dart';
 
 class ProfessionalHomeView extends StatefulWidget {
   const ProfessionalHomeView({super.key});
@@ -88,15 +89,14 @@ class _ProfessionalHomeViewState extends State<ProfessionalHomeView> {
 
           const SizedBox(height: 24),
 
-          // Botão Google Calendar (futuro)
+          // Gerenciar perfil profissional (profissão + serviços)
           GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content:
-                        Text('Integração com Google Calendar em breve!')),
-              );
-            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ManageProfessionalProfileView(),
+              ),
+            ),
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -113,7 +113,7 @@ class _ProfessionalHomeViewState extends State<ProfessionalHomeView> {
                       color: colors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.calendar_month,
+                    child: Icon(Icons.work_outline,
                         color: colors.primary, size: 22),
                   ),
                   const SizedBox(width: 14),
@@ -122,14 +122,15 @@ class _ProfessionalHomeViewState extends State<ProfessionalHomeView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Google Agenda',
+                          'Perfil profissional',
                           style: TextStyle(
                             color: colors.onSurface,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          'Sincronizar agendamentos (em breve)',
+                          authVm.user?.professionalProfile?.professionName ??
+                              'Configurar profissão e serviços',
                           style: TextStyle(
                             color: colors.onSurface.withValues(alpha: 0.5),
                             fontSize: 12,
